@@ -5,13 +5,15 @@
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://python.org)
 [![Platform](https://img.shields.io/badge/Platform-Windows-0078D6.svg)](https://microsoft.com/windows)
 [![Zero Dependencies](https://img.shields.io/badge/Dependencies-Zero%20External-emerald.svg)](https://docs.python.org/3/library/)
-[![Tests](https://img.shields.io/badge/Tests-24%20Passing-success.svg)](tests/)
+[![Tests](https://img.shields.io/badge/Tests-26%20Passing-success.svg)](tests/)
 
 ---
 
 ## ⚡ Key Features
 
 - **🌙 Custom Windows Taskbar & Titlebar Icon**: Custom multi-resolution icon (`.ico` and `.png`) featuring a luminous golden crescent moon with sparkling night stars. Integrates with Windows `AppUserModelID` (`SetCurrentProcessExplicitAppUserModelID`) so the Windows Taskbar and Alt+Tab switcher display the dedicated night icon instead of the generic Python executable icon.
+- **🎨 Dynamic Appearance Themes (Light, Dark, or System)**: Full support for **Light Mode**, **Dark Mode**, and **System Match** (automatically detects Windows 10/11 light or dark theme). Switch instantly at runtime via 1-click header pill or dedicated appearance buttons in settings.
+- **🖥️ Opens Maximized with Instant Resize Support**: Automatically opens in maximized window state (`zoomed`) on launch so the user gets full, spacious visibility without cramped views, with standard Windows restore/resize support.
 - **📜 Responsive Scrollable Viewports**: Seamless mousewheel and trackpad scrolling across all dashboard tabs (`ScrollableFrame`). Automatically detects content overflow on any display (including 768p laptop displays or high-DPI scaling) and provides an auto-hiding scrollbar so no buttons or settings ever get clipped.
 
 - **⏸️ Smart Video & Audio Pause (Never Resumes)**: Automatically detects if media is actively playing using Windows Core Audio hardware metering. Only pauses running videos or music (YouTube, Spotify, VLC, Netflix); if videos are already paused or stopped, it strictly leaves them paused and never accidentally resumes playback.

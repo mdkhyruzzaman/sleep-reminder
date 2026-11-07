@@ -22,11 +22,14 @@ class ModernSwitch(tk.Canvas):
         command: Optional[Callable[[bool], None]] = None,
         width: int = 48,
         height: int = 24,
-        bg: str = theme.BG_CARD,
-        active_color: str = theme.ACCENT_PRIMARY,
-        inactive_color: str = "#23334d",
+        bg: Optional[str] = None,
+        active_color: Optional[str] = None,
+        inactive_color: Optional[str] = None,
         knob_color: str = "#ffffff",
     ) -> None:
+        bg = bg or theme.BG_CARD
+        active_color = active_color or theme.ACCENT_PRIMARY
+        inactive_color = inactive_color or theme.SWITCH_TRACK_INACTIVE
         super().__init__(
             parent,
             width=width,
@@ -100,9 +103,10 @@ class SegmentedNavBar(tk.Frame):
         tabs: List[Tuple[str, str]],  # List of (tab_id, label_text)
         on_tab_change: Callable[[str], None],
         initial_tab: Optional[str] = None,
-        bg: str = "#090f1d",
+        bg: Optional[str] = None,
     ) -> None:
-        super().__init__(parent, bg=bg, padx=4, pady=4, bd=1, relief="solid", highlightthickness=1, highlightbackground="#1b2840")
+        bg = bg or theme.BG_NAV
+        super().__init__(parent, bg=bg, padx=4, pady=4, bd=1, relief="solid", highlightthickness=1, highlightbackground=theme.BORDER_NAV)
         self.tabs = tabs
         self.on_tab_change = on_tab_change
         self.active_tab = initial_tab or (tabs[0][0] if tabs else "")
@@ -117,10 +121,10 @@ class SegmentedNavBar(tk.Frame):
                 self,
                 text=label,
                 font=theme.FONT_BODY_BOLD if is_active else theme.FONT_BODY,
-                bg=theme.ACCENT_PRIMARY if is_active else "#090f1d",
+                bg=theme.ACCENT_PRIMARY if is_active else theme.BG_NAV,
                 fg="#ffffff" if is_active else theme.TEXT_MUTED,
-                activebackground=theme.ACCENT_PRIMARY_HOVER if is_active else "#16233b",
-                activeforeground="#ffffff",
+                activebackground=theme.ACCENT_PRIMARY_HOVER if is_active else theme.BG_CARD_HOVER,
+                activeforeground="#ffffff" if is_active else theme.TEXT_MAIN,
                 relief="flat",
                 bd=0,
                 padx=18,
@@ -138,7 +142,7 @@ class SegmentedNavBar(tk.Frame):
         for tid, btn in self.buttons.items():
             is_active = (tid == tab_id)
             btn.configure(
-                bg=theme.ACCENT_PRIMARY if is_active else "#090f1d",
+                bg=theme.ACCENT_PRIMARY if is_active else theme.BG_NAV,
                 fg="#ffffff" if is_active else theme.TEXT_MUTED,
                 font=theme.FONT_BODY_BOLD if is_active else theme.FONT_BODY,
             )
@@ -155,8 +159,9 @@ class SettingRow(tk.Frame):
         title: str,
         description: str,
         control_widget: Optional[tk.Widget] = None,
-        bg: str = theme.BG_CARD,
+        bg: Optional[str] = None,
     ) -> None:
+        bg = bg or theme.BG_CARD
         super().__init__(parent, bg=bg, padx=16, pady=12, bd=1, relief="solid", highlightthickness=1, highlightbackground=theme.BORDER_COLOR)
         self.pack(fill=tk.X, pady=4)
 
@@ -229,10 +234,11 @@ class ScrollableFrame(tk.Frame):
     def __init__(
         self,
         parent: tk.Widget,
-        bg: str = theme.BG_CARD,
+        bg: Optional[str] = None,
         *args,
         **kwargs,
     ) -> None:
+        bg = bg or theme.BG_CARD
         super().__init__(parent, bg=bg, *args, **kwargs)
         self.bg = bg
 
@@ -331,7 +337,8 @@ class ScrollableTab(ScrollableFrame):
     Avoids nested scrollbars while maintaining full API compatibility.
     """
 
-    def __init__(self, parent: tk.Widget, bg: str = theme.BG_CARD, *args, **kwargs) -> None:
+    def __init__(self, parent: tk.Widget, bg: Optional[str] = None, *args, **kwargs) -> None:
+        bg = bg or theme.BG_CARD
         tk.Frame.__init__(self, parent, bg=bg, *args, **kwargs)
         self.content = self
         self.bg = bg

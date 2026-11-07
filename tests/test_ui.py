@@ -198,6 +198,53 @@ class TestUIComponents(unittest.TestCase):
         self.assertIn("🌙", app.title())
         app.exit_application()
 
+    def test_window_maximized_on_launch(self):
+        if not self.has_display:
+            self.skipTest("No GUI display available")
+
+        import sys
+        cfg = ConfigManager()
+        hist = HistoryManager()
+        snd = SoundManager(enabled=False)
+        app = MainWindow(cfg, hist, snd)
+        app.update()
+
+        if sys.platform == "win32":
+            self.assertEqual(app.state(), "zoomed")
+        app.exit_application()
+
+    def test_theme_mode_switching(self):
+        if not self.has_display:
+            self.skipTest("No GUI display available")
+
+        from sleep_reminder.ui import theme
+        cfg = ConfigManager()
+        hist = HistoryManager()
+        snd = SoundManager(enabled=False)
+        app = MainWindow(cfg, hist, snd)
+        app.update()
+
+        # Switch to light
+        app.set_theme("light")
+        app.update()
+        self.assertEqual(app.config_mgr.config.theme_mode, "light")
+        self.assertFalse(theme.IS_DARK)
+        self.assertEqual(theme.BG_DARK, "#f8fafc")
+
+        # Switch to dark
+        app.set_theme("dark")
+        app.update()
+        self.assertEqual(app.config_mgr.config.theme_mode, "dark")
+        self.assertTrue(theme.IS_DARK)
+        self.assertEqual(theme.BG_DARK, "#0b0f19")
+
+        # Cycle theme
+        app._cycle_theme()  # dark -> system
+        app.update()
+        self.assertEqual(app.config_mgr.config.theme_mode, "system")
+
+        app.exit_application()
+
 
 if __name__ == "__main__":
     unittest.main()

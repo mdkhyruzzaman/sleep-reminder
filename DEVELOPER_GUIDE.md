@@ -112,8 +112,9 @@ flowchart TD
 
 | Visual Element | Source File & Class | Code Method | Description |
 |---|---|---|---|
-| **Window Frame & Dark Shell** | [`main_window.py`](file:///c:/Users/khyruzzaman/Documents/GitHub/sleep-reminder/sleep_reminder/ui/main_window.py) (`MainWindow`) | `__init__` (lines 58-71) | Configures window size (`840xH`), minsize (`680x480`), background (`#0b1120`), and ttk style. |
-| **Window Title** | [`main_window.py`](file:///c:/Users/khyruzzaman/Documents/GitHub/sleep-reminder/sleep_reminder/ui/main_window.py) (`MainWindow`) | `__init__` (line 59) | Sets title: `🌙 Sleep Reminder - Bedtime Assistant`. |
+| **Window Frame & Dark Shell** | [`main_window.py`](file:///c:/Users/khyruzzaman/Documents/GitHub/sleep-reminder/sleep_reminder/ui/main_window.py) (`MainWindow`) | `__init__` (lines 58-75) | Configures window size (`960xH`), minsize (`680x480`), background (`BG_DARK`), and ttk styles. |
+| **Maximized Window on Launch** | [`main_window.py`](file:///c:/Users/khyruzzaman/Documents/GitHub/sleep-reminder/sleep_reminder/ui/main_window.py) (`MainWindow`) | `__init__`, `_restore_from_tray` | Launches in maximized window state (`self.state('zoomed')`) on Windows so all controls and sections are immediately visible, while standard window borders allow instant restore and resizing. |
+| **Window Title** | [`main_window.py`](file:///c:/Users/khyruzzaman/Documents/GitHub/sleep-reminder/sleep_reminder/ui/main_window.py) (`MainWindow`) | `__init__` (line 57) | Sets title: `🌙 Sleep Reminder - Bedtime Assistant`. |
 | **Taskbar & Titlebar Moon Icon** | [`icon.py`](file:///c:/Users/khyruzzaman/Documents/GitHub/sleep-reminder/sleep_reminder/icon.py) | `apply_window_icon()`, `_apply_win32_taskbar_icon()` | Synthesizes multi-resolution `.ico` (16 to 64px) and dispatches `WM_SETICON` + `SetClassLongPtrW` directly to top-level HWND so Windows Taskbar uses the crescent moon icon. |
 
 ---
@@ -121,17 +122,18 @@ flowchart TD
 ### 3.2 Top Header & Controls
 
 ```
-[ 🌙 SLEEP REMINDER  PRO v2.0 ]                         [ 🔕 Muted ]  [ 10:45:12 PM ]
+[ 🌙 SLEEP REMINDER  PRO v2.0 ]                [ 💻 System ]  [ 🔔 Sound On ]  [ 10:45:12 PM ]
   ● Active Monitoring
 ```
 
 | Visual Element | Source File & Class | Code Method | Description |
 |---|---|---|---|
-| **Header Container** | [`main_window.py`](file:///c:/Users/khyruzzaman/Documents/GitHub/sleep-reminder/sleep_reminder/ui/main_window.py) | `_build_header()` (lines 148-232) | Top navigation bar with brand branding and system widgets. |
-| **Moon Logo & Badge** | [`main_window.py`](file:///c:/Users/khyruzzaman/Documents/GitHub/sleep-reminder/sleep_reminder/ui/main_window.py) | `_build_header()` (lines 151-185) | `🌙` character in `#fbbf24`, `SLEEP REMINDER` title, and indigo `PRO v2.0` badge. |
-| **Status Pill (`● Active Monitoring`)** | [`main_window.py`](file:///c:/Users/khyruzzaman/Documents/GitHub/sleep-reminder/sleep_reminder/ui/main_window.py) | `_build_header()` (lines 186-193) | Label referenced by `self.status_badge`. Changes to glowing amber when paused. |
-| **Live Digital Clock Chip** | [`main_window.py`](file:///c:/Users/khyruzzaman/Documents/GitHub/sleep-reminder/sleep_reminder/ui/main_window.py) | `_build_header()` (lines 199-210) | `self.clock_lbl` inside glassmorphic border chip. Updated every second by `_on_scheduler_tick()`. |
-| **Sound Toggle Pill** | [`main_window.py`](file:///c:/Users/khyruzzaman/Documents/GitHub/sleep-reminder/sleep_reminder/ui/main_window.py) | `_build_header()`, `_toggle_sound()` (lines 211-226) | `self.sound_toggle_btn`. Toggles `config.enable_sound` and switches text between `🔔 Sound On` and `🔕 Muted`. |
+| **Header Container** | [`main_window.py`](file:///c:/Users/khyruzzaman/Documents/GitHub/sleep-reminder/sleep_reminder/ui/main_window.py) | `_build_header()` (lines 160-245) | Top navigation bar with brand branding and system widgets. |
+| **Moon Logo & Badge** | [`main_window.py`](file:///c:/Users/khyruzzaman/Documents/GitHub/sleep-reminder/sleep_reminder/ui/main_window.py) | `_build_header()` (lines 165-200) | `🌙` character in `ACCENT_MOON`, `SLEEP REMINDER` title, and indigo `PRO v2.0` badge. |
+| **Status Pill (`● Active Monitoring`)** | [`main_window.py`](file:///c:/Users/khyruzzaman/Documents/GitHub/sleep-reminder/sleep_reminder/ui/main_window.py) | `_build_header()` (lines 203-210) | Label referenced by `self.status_badge`. Changes to glowing amber when paused. |
+| **Live Digital Clock Chip** | [`main_window.py`](file:///c:/Users/khyruzzaman/Documents/GitHub/sleep-reminder/sleep_reminder/ui/main_window.py) | `_build_header()` (lines 216-227) | `self.clock_lbl` inside glassmorphic border chip. Updated every second by `_on_scheduler_tick()`. |
+| **Sound Toggle Pill** | [`main_window.py`](file:///c:/Users/khyruzzaman/Documents/GitHub/sleep-reminder/sleep_reminder/ui/main_window.py) | `_build_header()`, `_toggle_sound()` (lines 228-243) | `self.sound_toggle_btn`. Toggles `config.enable_sound` and switches text between `🔔 Sound On` and `🔕 Muted`. |
+| **Header Theme Switcher Button** | [`main_window.py`](file:///c:/Users/khyruzzaman/Documents/GitHub/sleep-reminder/sleep_reminder/ui/main_window.py) | `_build_header()`, `_cycle_theme()` | `self.theme_btn`. 1-click switcher cycling between `💻 System`, `☀️ Light`, and `🌙 Dark` modes. |
 
 ---
 
@@ -222,6 +224,7 @@ flowchart TD
 
 ```
 ┌────────────────────────────────────────────────────────────────────────┐
+│ 🎨 Appearance Theme                   [ ☀️ Light ] [ 🌙 Dark ] [ 💻 Sys]│
 │ ⚡ Escalating Warnings (+30m, +15m, +10m, then repeating every 5m) [ON ]│
 │ ⏸️ Auto-Pause Video & Music (YouTube, Spotify, VLC)               [ON ]│
 │ 🖥️ Full-Screen Ambient Starry Display Overlay                     [ON ]│
@@ -232,7 +235,8 @@ flowchart TD
 
 | Visual Element | Source File & Class | Code Method | Description |
 |---|---|---|---|
-| **Linear Setting Card Row** | [`components.py`](file:///c:/Users/khyruzzaman/Documents/GitHub/sleep-reminder/sleep_reminder/ui/components.py) (`SettingRow`) | lines 153-230 | Card container ensuring title, description, and right-aligned controls fit uniformly without stair-stepping. |
+| **Appearance Theme Selector** | [`main_window.py`](file:///c:/Users/khyruzzaman/Documents/GitHub/sleep-reminder/sleep_reminder/ui/main_window.py) (`SettingRow`) | `_build_schedule_tab()`, `set_theme()` | Interactive pill segmented button group offering `[ ☀️ Light ]`, `[ 🌙 Dark ]`, and `[ 💻 System ]`. Dynamically switches and saves appearance. |
+| **Linear Setting Card Row** | [`components.py`](file:///c:/Users/khyruzzaman/Documents/GitHub/sleep-reminder/sleep_reminder/ui/components.py) (`SettingRow`) | lines 152-225 | Card container ensuring title, description, and right-aligned controls fit uniformly without stair-stepping. |
 | **Interactive Pill Switch** | [`components.py`](file:///c:/Users/khyruzzaman/Documents/GitHub/sleep-reminder/sleep_reminder/ui/components.py) (`ModernSwitch`) | lines 15-92 | iOS/Linear-style animated Canvas toggle switch with smooth circular knob. |
 | **Auto-Save on Toggle** | [`main_window.py`](file:///c:/Users/khyruzzaman/Documents/GitHub/sleep-reminder/sleep_reminder/ui/main_window.py) | `_on_setting_changed()` (lines 810-850) | Automatically validates configuration, writes to disk, and notifies active scheduler. |
 
@@ -408,6 +412,18 @@ Taskbar Notification Area:
   * Mathematical rasterizer rendering a luminous crescent moon with anti-aliasing and stars.
   * Encodes native 32-bit uncompressed DIB frames with XOR/AND masks for Windows GDI.
   * Packages 16x16, 24x24, 32x32, 48x48, and 64x64 into a valid `.ico` container with standard library `struct`.
+
+---
+
+### 4.8 Light, Dark, and System Theme Engine
+* **Source**: [`sleep_reminder/ui/theme.py`](file:///c:/Users/khyruzzaman/Documents/GitHub/sleep-reminder/sleep_reminder/ui/theme.py)
+* **Functions**: `set_theme_mode(mode: str)`, `get_effective_theme(mode: str)`, `is_system_dark_mode()`, `apply_theme_to_ttk(style)`
+* **How It Works**:
+  * Provides two complete design palettes: `DARK_PALETTE` (Obsidian Midnight Slate) and `LIGHT_PALETTE` (Crisp SaaS Slate 50 / Pure White / Indigo).
+  * Automatically detects Windows OS appearance via registry key:
+    `HKCU\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize\AppsUseLightTheme`.
+  * Dynamic live-switching: `MainWindow.set_theme(mode)` switches theme instantly in ~50ms without restarting background scheduler threads or system tray connections.
+  * User can cycle modes directly via header pill or pick `[ ☀️ Light ]`, `[ 🌙 Dark ]`, or `[ 💻 System ]` in Settings.
 
 ---
 

@@ -58,8 +58,12 @@ class MainWindow(tk.Tk):
         screen_h = self.winfo_screenheight()
         # Adapt height to user's monitor and Windows display scaling (e.g., 768p, 1080p, 125%/150%)
         initial_h = min(780, max(520, screen_h - 100))
-        self.geometry(f"840x{initial_h}")
+        self.geometry(f"960x{initial_h}")
         self.minsize(680, 480)
+
+        # Apply theme configuration (System, Light, or Dark)
+        initial_theme_mode = getattr(self.config_mgr.config, "theme_mode", "system")
+        theme.set_theme_mode(initial_theme_mode)
         self.configure(bg=theme.BG_DARK)
 
         # Apply custom crescent moon icon to titlebar & Windows taskbar
@@ -68,6 +72,12 @@ class MainWindow(tk.Tk):
         # Style configuration
         self.style = ttk.Style(self)
         theme.apply_theme_to_ttk(self.style)
+
+        # Open maximized on launch so the user has full view, with instant restore/resize support
+        try:
+            self.state("zoomed")
+        except Exception:
+            pass
 
         # Active popups tracking
         self._active_toast: Optional[ToastNotification] = None
@@ -117,11 +127,11 @@ class MainWindow(tk.Tk):
         # 1. Modern Web Navbar Header
         self._build_header(content)
 
-        # 2. Modern Hero Countdown Card (Section 1)
-        self._build_hero_card(content)
-
-        # 3. Modern Segmented Tab Bar (Section 2: tab bar directly above content)
+        # 2. Modern Segmented Tab Bar (Section 2: tab bar directly above content)
         self._build_nav_bar(content)
+
+        # 3. Modern Hero Countdown Card (Section 1)
+        self._build_hero_card(content)
 
         # 4. Content Container with Notebook (desktop tab headers hidden; controlled exclusively by modern pill bar)
         self.notebook = ttk.Notebook(content, style="NoTabs.TNotebook")
@@ -183,8 +193,8 @@ class MainWindow(tk.Tk):
             title_row,
             text="PRO v2.0",
             font=(theme.FONT_FAMILY, 8, "bold"),
-            bg="#1e1b4b",
-            fg=theme.ACCENT_CYAN,
+            bg=theme.BADGE_BG,
+            fg=theme.BADGE_FG,
             padx=6,
             pady=1,
         )
@@ -199,18 +209,18 @@ class MainWindow(tk.Tk):
         )
         self.status_badge.pack(anchor="w")
 
-        # Right Controls: Real-time Clock Chip & Sound Pill
+        # Right Controls: Real-time Clock Chip, Sound Pill, and Theme Mode Switcher
         controls_box = tk.Frame(header, bg=theme.BG_DARK)
         controls_box.pack(side=tk.RIGHT)
 
-        clock_chip = tk.Frame(controls_box, bg="#111c30", padx=12, pady=5, bd=1, relief="solid", highlightthickness=1, highlightbackground="#1e2d4a")
+        clock_chip = tk.Frame(controls_box, bg=theme.BG_SUBTLE, padx=12, pady=5, bd=1, relief="solid", highlightthickness=1, highlightbackground=theme.BORDER_COLOR)
         clock_chip.pack(side=tk.RIGHT, padx=(10, 0))
 
         self.clock_lbl = tk.Label(
             clock_chip,
             text="--:--:--",
             font=(theme.FONT_FAMILY, 12, "bold"),
-            bg="#111c30",
+            bg=theme.BG_SUBTLE,
             fg=theme.ACCENT_CYAN,
         )
         self.clock_lbl.pack()
@@ -219,9 +229,9 @@ class MainWindow(tk.Tk):
             controls_box,
             text="🔔 Sound On" if self.config_mgr.config.enable_sound else "🔕 Muted",
             font=theme.FONT_CAPTION,
-            bg="#1e293b",
+            bg=theme.BG_CARD_HOVER,
             fg=theme.TEXT_MAIN,
-            activebackground=theme.BG_CARD_HOVER,
+            activebackground=theme.BG_CARD_ACTIVE,
             activeforeground="#ffffff",
             relief="flat",
             padx=12,
@@ -229,7 +239,25 @@ class MainWindow(tk.Tk):
             cursor="hand2",
             command=self._toggle_sound,
         )
-        self.sound_toggle_btn.pack(side=tk.RIGHT)
+        self.sound_toggle_btn.pack(side=tk.RIGHT, padx=(8, 0))
+
+        current_theme_mode = getattr(self.config_mgr.config, "theme_mode", "system")
+        mode_icon = "💻" if current_theme_mode == "system" else ("☀️" if current_theme_mode == "light" else "🌙")
+        self.theme_btn = tk.Button(
+            controls_box,
+            text=f"{mode_icon} {current_theme_mode.capitalize()}",
+            font=theme.FONT_CAPTION,
+            bg=theme.BG_CARD_HOVER,
+            fg=theme.TEXT_MAIN,
+            activebackground=theme.BG_CARD_ACTIVE,
+            activeforeground="#ffffff",
+            relief="flat",
+            padx=12,
+            pady=5,
+            cursor="hand2",
+            command=self._cycle_theme,
+        )
+        self.theme_btn.pack(side=tk.RIGHT)
 
     def _build_nav_bar(self, parent: Optional[tk.Widget] = None) -> None:
         p = parent if parent is not None else self
@@ -265,24 +293,24 @@ class MainWindow(tk.Tk):
 
         card = tk.Frame(
             hero_container,
-            bg="#0f192d",
+            bg=theme.BG_HERO,
             padx=20,
             pady=14,
             bd=1,
             relief="solid",
             highlightthickness=1,
-            highlightbackground="#233555",
+            highlightbackground=theme.BORDER_HERO,
         )
         card.pack(fill=tk.X)
 
-        top_row = tk.Frame(card, bg="#0f192d")
+        top_row = tk.Frame(card, bg=theme.BG_HERO)
         top_row.pack(fill=tk.X, pady=(0, 4))
 
         self.hero_event_lbl = tk.Label(
             top_row,
             text="COUNTDOWN TO BEDTIME",
             font=(theme.FONT_FAMILY, 9, "bold"),
-            bg="#0f192d",
+            bg=theme.BG_HERO,
             fg=theme.ACCENT_CYAN,
         )
         self.hero_event_lbl.pack(side=tk.LEFT)
@@ -291,44 +319,48 @@ class MainWindow(tk.Tk):
             top_row,
             text="LIVE TRACKER",
             font=(theme.FONT_FAMILY, 8, "bold"),
-            bg="#1e293b",
+            bg=theme.BG_CARD_HOVER,
             fg=theme.ACCENT_SUCCESS,
             padx=8,
             pady=2,
+            bd=1,
+            relief="solid",
+            highlightthickness=1,
+            highlightbackground=theme.BORDER_COLOR,
         )
         self.hero_tag_pill.pack(side=tk.RIGHT)
 
-        countdown_row = tk.Frame(card, bg="#0f192d")
+        countdown_row = tk.Frame(card, bg=theme.BG_HERO)
         countdown_row.pack(fill=tk.X, pady=(2, 6))
 
         # Segmented Digital Countdown Chips
-        self.chip_hrs_frame = tk.Frame(countdown_row, bg="#080e1a", padx=12, pady=5, bd=1, relief="solid", highlightthickness=1, highlightbackground="#1b2943")
+        self.chip_hrs_frame = tk.Frame(countdown_row, bg=theme.CHIP_BG, padx=12, pady=5, bd=1, relief="solid", highlightthickness=1, highlightbackground=theme.CHIP_BORDER)
         self.chip_hrs_frame.pack(side=tk.LEFT)
-        self.chip_hrs_val = tk.Label(self.chip_hrs_frame, text="00", font=(theme.FONT_FAMILY, 22, "bold"), bg="#080e1a", fg=theme.TEXT_MAIN)
+        self.chip_hrs_val = tk.Label(self.chip_hrs_frame, text="00", font=(theme.FONT_FAMILY, 22, "bold"), bg=theme.CHIP_BG, fg=theme.TEXT_MAIN)
         self.chip_hrs_val.pack()
-        tk.Label(self.chip_hrs_frame, text="HOURS", font=(theme.FONT_FAMILY, 7, "bold"), bg="#080e1a", fg=theme.TEXT_MUTED).pack()
+        tk.Label(self.chip_hrs_frame, text="HOURS", font=(theme.FONT_FAMILY, 7, "bold"), bg=theme.CHIP_BG, fg=theme.TEXT_MUTED).pack()
 
-        tk.Label(countdown_row, text=":", font=(theme.FONT_FAMILY, 18, "bold"), bg="#0f192d", fg=theme.TEXT_DIM).pack(side=tk.LEFT, padx=5)
+        tk.Label(countdown_row, text=":", font=(theme.FONT_FAMILY, 18, "bold"), bg=theme.BG_HERO, fg=theme.TEXT_DIM).pack(side=tk.LEFT, padx=5)
 
-        self.chip_mins_frame = tk.Frame(countdown_row, bg="#080e1a", padx=12, pady=5, bd=1, relief="solid", highlightthickness=1, highlightbackground="#1b2943")
+        self.chip_mins_frame = tk.Frame(countdown_row, bg=theme.CHIP_BG, padx=12, pady=5, bd=1, relief="solid", highlightthickness=1, highlightbackground=theme.CHIP_BORDER)
         self.chip_mins_frame.pack(side=tk.LEFT)
-        self.chip_mins_val = tk.Label(self.chip_mins_frame, text="00", font=(theme.FONT_FAMILY, 22, "bold"), bg="#080e1a", fg=theme.TEXT_MAIN)
+        self.chip_mins_val = tk.Label(self.chip_mins_frame, text="00", font=(theme.FONT_FAMILY, 22, "bold"), bg=theme.CHIP_BG, fg=theme.TEXT_MAIN)
         self.chip_mins_val.pack()
-        tk.Label(self.chip_mins_frame, text="MINUTES", font=(theme.FONT_FAMILY, 7, "bold"), bg="#080e1a", fg=theme.TEXT_MUTED).pack()
+        tk.Label(self.chip_mins_frame, text="MINUTES", font=(theme.FONT_FAMILY, 7, "bold"), bg=theme.CHIP_BG, fg=theme.TEXT_MUTED).pack()
 
-        tk.Label(countdown_row, text=":", font=(theme.FONT_FAMILY, 18, "bold"), bg="#0f192d", fg=theme.TEXT_DIM).pack(side=tk.LEFT, padx=5)
+        tk.Label(countdown_row, text=":", font=(theme.FONT_FAMILY, 18, "bold"), bg=theme.BG_HERO, fg=theme.TEXT_DIM).pack(side=tk.LEFT, padx=5)
 
-        self.chip_secs_frame = tk.Frame(countdown_row, bg="#080e1a", padx=12, pady=5, bd=1, relief="solid", highlightthickness=1, highlightbackground="#1b2943")
+        self.chip_secs_frame = tk.Frame(countdown_row, bg=theme.CHIP_BG, padx=12, pady=5, bd=1, relief="solid", highlightthickness=1, highlightbackground=theme.CHIP_BORDER)
         self.chip_secs_frame.pack(side=tk.LEFT)
-        self.chip_secs_val = tk.Label(self.chip_secs_frame, text="00", font=(theme.FONT_FAMILY, 22, "bold"), bg="#080e1a", fg=theme.ACCENT_CYAN)
+        self.chip_secs_val = tk.Label(self.chip_secs_frame, text="00", font=(theme.FONT_FAMILY, 22, "bold"), bg=theme.CHIP_BG, fg=theme.ACCENT_CYAN)
         self.chip_secs_val.pack()
-        tk.Label(self.chip_secs_frame, text="SECONDS", font=(theme.FONT_FAMILY, 7, "bold"), bg="#080e1a", fg=theme.TEXT_MUTED).pack()
+        tk.Label(self.chip_secs_frame, text="SECONDS", font=(theme.FONT_FAMILY, 7, "bold"), bg=theme.CHIP_BG, fg=theme.TEXT_MUTED).pack()
 
         # Legacy label kept for test assertions
-        self.countdown_lbl = tk.Label(countdown_row, text="", bg="#0f192d")
+        self.countdown_lbl = tk.Label(countdown_row, text="", bg=theme.BG_HERO)
 
         # Right quick actions inside hero
-        hero_actions = tk.Frame(countdown_row, bg="#0f192d")
+        hero_actions = tk.Frame(countdown_row, bg=theme.BG_HERO)
         hero_actions.pack(side=tk.RIGHT, pady=2)
 
         sleep_now_btn = tk.Button(
@@ -350,9 +382,9 @@ class MainWindow(tk.Tk):
             hero_actions,
             text="🔔  Test Bedtime Alert",
             font=theme.FONT_CAPTION,
-            bg="#16233b",
+            bg=theme.BG_CARD_HOVER,
             fg=theme.TEXT_MAIN,
-            activebackground="#203152",
+            activebackground=theme.BG_CARD_ACTIVE,
             relief="flat",
             padx=12,
             pady=4,
@@ -361,14 +393,14 @@ class MainWindow(tk.Tk):
         )
         test_alert_hero.pack(side=tk.TOP, fill=tk.X)
 
-        detail_row = tk.Frame(card, bg="#0f192d")
+        detail_row = tk.Frame(card, bg=theme.BG_HERO)
         detail_row.pack(fill=tk.X, pady=(4, 0))
 
         self.hero_detail_lbl = tk.Label(
             detail_row,
             text=f"Target Bedtime: {self.config_mgr.config.bedtime}  •  Escalation: +30m, +15m, +10m, then every 5m",
             font=theme.FONT_CAPTION,
-            bg="#0f192d",
+            bg=theme.BG_HERO,
             fg=theme.TEXT_MUTED,
         )
         self.hero_detail_lbl.pack(side=tk.LEFT)
@@ -386,25 +418,25 @@ class MainWindow(tk.Tk):
         # =====================================================================
         studio_card = tk.Frame(
             container,
-            bg="#0e1627",
+            bg=theme.BG_CARD,
             padx=16,
             pady=12,
             bd=1,
             relief="solid",
             highlightthickness=1,
-            highlightbackground="#233555",
+            highlightbackground=theme.BORDER_COLOR,
         )
         studio_card.pack(fill=tk.X, pady=(0, 10))
 
         # Header of Studio
-        studio_header = tk.Frame(studio_card, bg="#0e1627")
+        studio_header = tk.Frame(studio_card, bg=theme.BG_CARD)
         studio_header.pack(fill=tk.X, pady=(0, 10))
 
         tk.Label(
             studio_header,
             text="⏰  BEDTIME REMINDER SETUP STUDIO",
             font=(theme.FONT_FAMILY, 11, "bold"),
-            bg="#0e1627",
+            bg=theme.BG_CARD,
             fg=theme.ACCENT_MOON,
         ).pack(side=tk.LEFT)
 
@@ -412,33 +444,33 @@ class MainWindow(tk.Tk):
             studio_header,
             text="Configure your target sleep time and see real-time escalation",
             font=theme.FONT_CAPTION,
-            bg="#0e1627",
+            bg=theme.BG_CARD,
             fg=theme.TEXT_MUTED,
         ).pack(side=tk.LEFT, padx=(10, 0))
 
         # Center Hero Digital Clock Picker Card
-        picker_container = tk.Frame(studio_card, bg="#0e1627")
+        picker_container = tk.Frame(studio_card, bg=theme.BG_CARD)
         picker_container.pack(fill=tk.X, pady=(0, 8))
 
         clock_center_box = tk.Frame(
             picker_container,
-            bg="#080e1b",
+            bg=theme.BG_SUBTLE,
             padx=20,
             pady=10,
             bd=1,
             relief="solid",
             highlightthickness=1,
-            highlightbackground="#1d2e4c",
+            highlightbackground=theme.BORDER_COLOR,
         )
         clock_center_box.pack(side=tk.LEFT, padx=(0, 16))
 
         # Hours Column
-        hrs_col = tk.Frame(clock_center_box, bg="#080e1b")
+        hrs_col = tk.Frame(clock_center_box, bg=theme.BG_SUBTLE)
         hrs_col.pack(side=tk.LEFT)
 
         btn_h_up = tk.Button(
-            hrs_col, text="▲", font=(theme.FONT_FAMILY, 9, "bold"), bg="#152136", fg=theme.ACCENT_CYAN,
-            activebackground="#203352", relief="flat", bd=0, padx=14, pady=2, cursor="hand2",
+            hrs_col, text="▲", font=(theme.FONT_FAMILY, 9, "bold"), bg=theme.BG_CARD_HOVER, fg=theme.ACCENT_CYAN,
+            activebackground=theme.BG_CARD_ACTIVE, relief="flat", bd=0, padx=14, pady=2, cursor="hand2",
             command=lambda: self._increment_bed_hour(1),
         )
         btn_h_up.pack()
@@ -447,30 +479,30 @@ class MainWindow(tk.Tk):
             hrs_col,
             text=f"{b_hour:02d}",
             font=(theme.FONT_FAMILY, 32, "bold"),
-            bg="#080e1b",
+            bg=theme.BG_SUBTLE,
             fg=theme.TEXT_MAIN,
         )
         self.big_hour_lbl.pack(pady=1)
 
         btn_h_down = tk.Button(
-            hrs_col, text="▼", font=(theme.FONT_FAMILY, 9, "bold"), bg="#152136", fg=theme.ACCENT_CYAN,
-            activebackground="#203352", relief="flat", bd=0, padx=14, pady=2, cursor="hand2",
+            hrs_col, text="▼", font=(theme.FONT_FAMILY, 9, "bold"), bg=theme.BG_CARD_HOVER, fg=theme.ACCENT_CYAN,
+            activebackground=theme.BG_CARD_ACTIVE, relief="flat", bd=0, padx=14, pady=2, cursor="hand2",
             command=lambda: self._increment_bed_hour(-1),
         )
         btn_h_down.pack()
 
-        tk.Label(hrs_col, text="HOUR", font=(theme.FONT_FAMILY, 7, "bold"), bg="#080e1b", fg=theme.TEXT_MUTED).pack(pady=(2, 0))
+        tk.Label(hrs_col, text="HOUR", font=(theme.FONT_FAMILY, 7, "bold"), bg=theme.BG_SUBTLE, fg=theme.TEXT_MUTED).pack(pady=(2, 0))
 
         # Colon separator
-        tk.Label(clock_center_box, text=":", font=(theme.FONT_FAMILY, 28, "bold"), bg="#080e1b", fg=theme.ACCENT_CYAN).pack(side=tk.LEFT, padx=10)
+        tk.Label(clock_center_box, text=":", font=(theme.FONT_FAMILY, 28, "bold"), bg=theme.BG_SUBTLE, fg=theme.ACCENT_CYAN).pack(side=tk.LEFT, padx=10)
 
         # Minutes Column
-        mins_col = tk.Frame(clock_center_box, bg="#080e1b")
+        mins_col = tk.Frame(clock_center_box, bg=theme.BG_SUBTLE)
         mins_col.pack(side=tk.LEFT)
 
         btn_m_up = tk.Button(
-            mins_col, text="▲", font=(theme.FONT_FAMILY, 9, "bold"), bg="#152136", fg=theme.ACCENT_CYAN,
-            activebackground="#203352", relief="flat", bd=0, padx=14, pady=2, cursor="hand2",
+            mins_col, text="▲", font=(theme.FONT_FAMILY, 9, "bold"), bg=theme.BG_CARD_HOVER, fg=theme.ACCENT_CYAN,
+            activebackground=theme.BG_CARD_ACTIVE, relief="flat", bd=0, padx=14, pady=2, cursor="hand2",
             command=lambda: self._increment_bed_min(5),
         )
         btn_m_up.pack()
@@ -479,22 +511,22 @@ class MainWindow(tk.Tk):
             mins_col,
             text=f"{b_min:02d}",
             font=(theme.FONT_FAMILY, 32, "bold"),
-            bg="#080e1b",
+            bg=theme.BG_SUBTLE,
             fg=theme.TEXT_MAIN,
         )
         self.big_min_lbl.pack(pady=1)
 
         btn_m_down = tk.Button(
-            mins_col, text="▼", font=(theme.FONT_FAMILY, 9, "bold"), bg="#152136", fg=theme.ACCENT_CYAN,
-            activebackground="#203352", relief="flat", bd=0, padx=14, pady=2, cursor="hand2",
+            mins_col, text="▼", font=(theme.FONT_FAMILY, 9, "bold"), bg=theme.BG_CARD_HOVER, fg=theme.ACCENT_CYAN,
+            activebackground=theme.BG_CARD_ACTIVE, relief="flat", bd=0, padx=14, pady=2, cursor="hand2",
             command=lambda: self._increment_bed_min(-5),
         )
         btn_m_down.pack()
 
-        tk.Label(mins_col, text="MINUTE", font=(theme.FONT_FAMILY, 7, "bold"), bg="#080e1b", fg=theme.TEXT_MUTED).pack(pady=(2, 0))
+        tk.Label(mins_col, text="MINUTE", font=(theme.FONT_FAMILY, 7, "bold"), bg=theme.BG_SUBTLE, fg=theme.TEXT_MUTED).pack(pady=(2, 0))
 
         # AM / PM Toggle Pills
-        ampm_col = tk.Frame(clock_center_box, bg="#080e1b")
+        ampm_col = tk.Frame(clock_center_box, bg=theme.BG_SUBTLE)
         ampm_col.pack(side=tk.LEFT, padx=(14, 0))
 
         is_pm = (b_hour >= 12)
@@ -502,7 +534,7 @@ class MainWindow(tk.Tk):
             ampm_col,
             text="AM",
             font=(theme.FONT_FAMILY, 9, "bold"),
-            bg="#0d1422" if is_pm else theme.ACCENT_PRIMARY,
+            bg=theme.BG_CARD_HOVER if is_pm else theme.ACCENT_PRIMARY,
             fg=theme.TEXT_MUTED if is_pm else "#ffffff",
             activebackground=theme.ACCENT_PRIMARY_HOVER,
             relief="flat",
@@ -518,7 +550,7 @@ class MainWindow(tk.Tk):
             ampm_col,
             text="PM",
             font=(theme.FONT_FAMILY, 9, "bold"),
-            bg=theme.ACCENT_PRIMARY if is_pm else "#0d1422",
+            bg=theme.ACCENT_PRIMARY if is_pm else theme.BG_CARD_HOVER,
             fg="#ffffff" if is_pm else theme.TEXT_MUTED,
             activebackground=theme.ACCENT_PRIMARY_HOVER,
             relief="flat",
@@ -531,34 +563,34 @@ class MainWindow(tk.Tk):
         self.ampm_pm_btn.pack(pady=2)
 
         # Quick Adjustments & Wake Time container (Right of Clock)
-        studio_right_col = tk.Frame(picker_container, bg="#0e1627")
+        studio_right_col = tk.Frame(picker_container, bg=theme.BG_CARD)
         studio_right_col.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
         # Quick Increments Row
-        inc_row = tk.Frame(studio_right_col, bg="#0e1627")
+        inc_row = tk.Frame(studio_right_col, bg=theme.BG_CARD)
         inc_row.pack(anchor="w", pady=(2, 6))
 
-        tk.Label(inc_row, text="Quick Adjust:", font=theme.FONT_CAPTION, bg="#0e1627", fg=theme.TEXT_MUTED).pack(side=tk.LEFT, padx=(0, 6))
+        tk.Label(inc_row, text="Quick Adjust:", font=theme.FONT_CAPTION, bg=theme.BG_CARD, fg=theme.TEXT_MUTED).pack(side=tk.LEFT, padx=(0, 6))
         for delta_mins in [-30, -15, 15, 30]:
             lbl = f"+{delta_mins}m" if delta_mins > 0 else f"{delta_mins}m"
             b = tk.Button(
-                inc_row, text=lbl, font=theme.FONT_CAPTION, bg="#152136", fg=theme.TEXT_MAIN,
+                inc_row, text=lbl, font=theme.FONT_CAPTION, bg=theme.BG_CARD_HOVER, fg=theme.TEXT_MAIN,
                 activebackground=theme.ACCENT_PRIMARY, activeforeground="#ffffff", relief="flat", bd=0, padx=8, pady=2,
                 cursor="hand2", command=lambda d=delta_mins: self._adjust_bed_minutes(d),
             )
             b.pack(side=tk.LEFT, padx=2)
 
         # Target Wake Time row
-        wake_row = tk.Frame(studio_right_col, bg="#0e1627")
+        wake_row = tk.Frame(studio_right_col, bg=theme.BG_CARD)
         wake_row.pack(anchor="w", pady=(4, 6))
 
-        tk.Label(wake_row, text="Morning Wake Time:", font=theme.FONT_BODY, bg="#0e1627", fg=theme.TEXT_MAIN).pack(side=tk.LEFT, padx=(0, 6))
+        tk.Label(wake_row, text="Morning Wake Time:", font=theme.FONT_BODY, bg=theme.BG_CARD, fg=theme.TEXT_MAIN).pack(side=tk.LEFT, padx=(0, 6))
 
         self.wake_hour_spin = ttk.Spinbox(wake_row, from_=0, to=23, width=3, format="%02.0f", wrap=True, command=self._on_wake_changed)
         self.wake_hour_spin.set(f"{w_hour:02d}")
         self.wake_hour_spin.pack(side=tk.LEFT, padx=(0, 2))
 
-        tk.Label(wake_row, text=":", bg="#0e1627", fg=theme.TEXT_MAIN).pack(side=tk.LEFT)
+        tk.Label(wake_row, text=":", bg=theme.BG_CARD, fg=theme.TEXT_MAIN).pack(side=tk.LEFT)
 
         self.wake_min_spin = ttk.Spinbox(wake_row, from_=0, to=59, width=3, format="%02.0f", wrap=True, command=self._on_wake_changed)
         self.wake_min_spin.set(f"{w_min:02d}")
@@ -567,7 +599,7 @@ class MainWindow(tk.Tk):
         self.wake_12h_preview = tk.Label(
             wake_row,
             text=f"({datetime(2026, 1, 1, w_hour, w_min).strftime('%I:%M %p').lstrip('0')})",
-            bg="#0e1627",
+            bg=theme.BG_CARD,
             fg=theme.TEXT_MUTED,
             font=theme.FONT_CAPTION,
         )
@@ -578,15 +610,19 @@ class MainWindow(tk.Tk):
             studio_right_col,
             text="",
             font=(theme.FONT_FAMILY, 9, "bold"),
-            bg="#13213a",
+            bg=theme.BG_SUBTLE,
             fg=theme.ACCENT_CYAN,
             padx=10,
             pady=4,
+            bd=1,
+            relief="solid",
+            highlightthickness=1,
+            highlightbackground=theme.BORDER_COLOR,
         )
         self.sleep_duration_badge.pack(anchor="w")
 
         # Hidden / legacy inputs for compatibility with automated tests
-        legacy_frame = tk.Frame(studio_card, bg="#0e1627")
+        legacy_frame = tk.Frame(studio_card, bg=theme.BG_CARD)
         self.bed_hour_spin = ttk.Spinbox(legacy_frame, from_=0, to=23, width=3, format="%02.0f")
         self.bed_hour_spin.set(f"{b_hour:02d}")
         self.bed_min_spin = ttk.Spinbox(legacy_frame, from_=0, to=59, width=3, format="%02.0f")
@@ -594,17 +630,17 @@ class MainWindow(tk.Tk):
         self.bed_12h_preview = tk.Label(legacy_frame, text="")
 
         # Preset Chips Grid Row
-        presets_box = tk.Frame(studio_card, bg="#0e1627")
+        presets_box = tk.Frame(studio_card, bg=theme.BG_CARD)
         presets_box.pack(fill=tk.X, pady=(6, 0))
 
-        tk.Label(presets_box, text="Bedtime Presets:", font=theme.FONT_CAPTION, bg="#0e1627", fg=theme.TEXT_MUTED).pack(side=tk.LEFT, padx=(0, 8))
+        tk.Label(presets_box, text="Bedtime Presets:", font=theme.FONT_CAPTION, bg=theme.BG_CARD, fg=theme.TEXT_MUTED).pack(side=tk.LEFT, padx=(0, 8))
 
         for preset_time, preset_display in self.PRESET_BEDTIMES:
             chip_btn = tk.Button(
                 presets_box,
                 text=f"{preset_display}",
                 font=theme.FONT_CAPTION,
-                bg="#16233b",
+                bg=theme.BG_CARD_HOVER,
                 fg=theme.TEXT_MAIN,
                 activebackground=theme.ACCENT_PRIMARY,
                 activeforeground="#ffffff",
@@ -620,7 +656,7 @@ class MainWindow(tk.Tk):
         # =====================================================================
         # SECTION 2: DYNAMIC ESCALATING TIMELINE LADDER
         # =====================================================================
-        section2 = tk.Frame(container, bg=theme.BG_CARD, padx=14, pady=10, bd=1, relief="solid", highlightthickness=1, highlightbackground="#1e2c45")
+        section2 = tk.Frame(container, bg=theme.BG_CARD, padx=14, pady=10, bd=1, relief="solid", highlightthickness=1, highlightbackground=theme.BORDER_COLOR)
         section2.pack(fill=tk.X, pady=(0, 10))
 
         sec2_header = tk.Frame(section2, bg=theme.BG_CARD)
@@ -629,7 +665,7 @@ class MainWindow(tk.Tk):
         tk.Label(sec2_header, text="Calculated exact alert schedule for tonight", font=theme.FONT_CAPTION, bg=theme.BG_CARD, fg=theme.TEXT_MUTED).pack(side=tk.LEFT, padx=(10, 0))
 
         # Dynamic Timeline Step Cards
-        timeline_bar = tk.Frame(section2, bg="#0d1422", padx=8, pady=8, bd=1, relief="solid", highlightthickness=1, highlightbackground="#19253b")
+        timeline_bar = tk.Frame(section2, bg=theme.BG_SUBTLE, padx=8, pady=8, bd=1, relief="solid", highlightthickness=1, highlightbackground=theme.BORDER_COLOR)
         timeline_bar.pack(fill=tk.X, pady=(0, 10))
 
         ladder_steps = [
@@ -645,19 +681,53 @@ class MainWindow(tk.Tk):
         ]
 
         for step_id, step_name, col in ladder_steps:
-            box = tk.Frame(timeline_bar, bg="#0d1422")
+            box = tk.Frame(timeline_bar, bg=theme.BG_SUBTLE)
             box.pack(side=tk.LEFT, padx=3)
 
-            tk.Label(box, text=step_name, font=theme.FONT_SMALL, bg="#0d1422", fg=col).pack()
+            tk.Label(box, text=step_name, font=theme.FONT_SMALL, bg=theme.BG_SUBTLE, fg=col).pack()
 
             if "stage" in step_id:
-                time_lbl = tk.Label(box, text="--:--", font=(theme.FONT_FAMILY, 8, "bold"), bg="#0d1422", fg=theme.TEXT_MAIN)
+                time_lbl = tk.Label(box, text="--:--", font=(theme.FONT_FAMILY, 8, "bold"), bg=theme.BG_SUBTLE, fg=theme.TEXT_MAIN)
                 time_lbl.pack()
                 self.timeline_step_labels[step_id] = time_lbl
 
         # =====================================================================
         # SECTION 3: MODERN SETTING SWITCH CARDS
         # =====================================================================
+        # Appearance Theme Selection SettingRow
+        row_theme = SettingRow(
+            section2,
+            icon="🎨",
+            title="Appearance Theme",
+            description="Choose between Light theme, Dark theme, or automatically match Windows System theme.",
+        )
+        theme_btn_box = tk.Frame(row_theme.right_box, bg=theme.BG_CARD)
+        theme_btn_box.pack(side=tk.RIGHT)
+
+        current_theme_mode = getattr(self.config_mgr.config, "theme_mode", "system")
+        for mode_key, mode_icon, mode_title in [
+            ("light", "☀️", "Light"),
+            ("dark", "🌙", "Dark"),
+            ("system", "💻", "System"),
+        ]:
+            is_active = (current_theme_mode == mode_key)
+            t_btn = tk.Button(
+                theme_btn_box,
+                text=f"{mode_icon} {mode_title}",
+                font=theme.FONT_BODY_BOLD if is_active else theme.FONT_CAPTION,
+                bg=theme.ACCENT_PRIMARY if is_active else theme.BG_CARD_HOVER,
+                fg="#ffffff" if is_active else theme.TEXT_MUTED,
+                activebackground=theme.ACCENT_PRIMARY_HOVER if is_active else theme.BG_CARD_ACTIVE,
+                activeforeground="#ffffff" if is_active else theme.TEXT_MAIN,
+                relief="flat",
+                bd=0,
+                padx=10,
+                pady=4,
+                cursor="hand2",
+                command=lambda m=mode_key: self.set_theme(m),
+            )
+            t_btn.pack(side=tk.LEFT, padx=3)
+
         self.enable_escalating_check = tk.BooleanVar(value=cfg.enable_escalating_reminders)
         row_esc = SettingRow(
             section2,
@@ -740,9 +810,9 @@ class MainWindow(tk.Tk):
             action_row,
             text="🔔  Preview Reminder Now",
             font=theme.FONT_BODY,
-            bg="#16233b",
+            bg=theme.BG_CARD_HOVER,
             fg=theme.TEXT_MAIN,
-            activebackground="#203152",
+            activebackground=theme.BG_CARD_ACTIVE,
             activeforeground="#ffffff",
             relief="flat",
             padx=14,
@@ -851,11 +921,11 @@ class MainWindow(tk.Tk):
         is_pm = (b_h >= 12)
         if hasattr(self, "ampm_am_btn") and self.ampm_am_btn.winfo_exists():
             self.ampm_am_btn.config(
-                bg="#0d1422" if is_pm else theme.ACCENT_PRIMARY,
+                bg=theme.BG_CARD_HOVER if is_pm else theme.ACCENT_PRIMARY,
                 fg=theme.TEXT_MUTED if is_pm else "#ffffff",
             )
             self.ampm_pm_btn.config(
-                bg=theme.ACCENT_PRIMARY if is_pm else "#0d1422",
+                bg=theme.ACCENT_PRIMARY if is_pm else theme.BG_CARD_HOVER,
                 fg="#ffffff" if is_pm else theme.TEXT_MUTED,
             )
 
@@ -960,7 +1030,7 @@ class MainWindow(tk.Tk):
             font=theme.FONT_CAPTION,
             bg=theme.BG_CARD_HOVER,
             fg=theme.ACCENT_CYAN,
-            activebackground="#203254",
+            activebackground=theme.BG_CARD_ACTIVE,
             relief="flat",
             padx=12,
             pady=4,
@@ -997,17 +1067,17 @@ class MainWindow(tk.Tk):
         header_lbl.pack(anchor="w", pady=(0, 6))
 
         for opt in options:
-            card = tk.Frame(self.cycle_cards_frame, bg=theme.BG_DARK, padx=14, pady=8, bd=1, relief="solid")
+            card = tk.Frame(self.cycle_cards_frame, bg=theme.BG_SUBTLE, padx=14, pady=8, bd=1, relief="solid", highlightthickness=1, highlightbackground=theme.BORDER_COLOR)
             card.pack(fill=tk.X, pady=4)
 
-            left_box = tk.Frame(card, bg=theme.BG_DARK)
+            left_box = tk.Frame(card, bg=theme.BG_SUBTLE)
             left_box.pack(side=tk.LEFT)
 
             time_lbl = tk.Label(
                 left_box,
                 text=opt["bedtime"],
                 font=(theme.FONT_FAMILY, 15, "bold"),
-                bg=theme.BG_DARK,
+                bg=theme.BG_SUBTLE,
                 fg=opt["color"],
             )
             time_lbl.pack(side=tk.LEFT, padx=(0, 8))
@@ -1016,7 +1086,7 @@ class MainWindow(tk.Tk):
                 left_box,
                 text=f"({opt['display_12h']})",
                 font=theme.FONT_CAPTION,
-                bg=theme.BG_DARK,
+                bg=theme.BG_SUBTLE,
                 fg=theme.TEXT_MUTED,
             )
             display_12h.pack(side=tk.LEFT, padx=(0, 12))
@@ -1025,7 +1095,7 @@ class MainWindow(tk.Tk):
                 left_box,
                 text=f"{opt['tag']} • {opt['duration_str']}",
                 font=theme.FONT_CAPTION,
-                bg=theme.BG_DARK,
+                bg=theme.BG_SUBTLE,
                 fg=theme.TEXT_MAIN,
             )
             tag_lbl.pack(side=tk.LEFT)
@@ -1063,14 +1133,14 @@ class MainWindow(tk.Tk):
         header_lbl.pack(anchor="w", pady=(0, 6))
 
         for opt in wake_options:
-            card = tk.Frame(self.cycle_cards_frame, bg=theme.BG_DARK, padx=14, pady=8, bd=1, relief="solid")
+            card = tk.Frame(self.cycle_cards_frame, bg=theme.BG_SUBTLE, padx=14, pady=8, bd=1, relief="solid", highlightthickness=1, highlightbackground=theme.BORDER_COLOR)
             card.pack(fill=tk.X, pady=4)
 
             time_lbl = tk.Label(
                 card,
                 text=opt["wake_time"],
                 font=(theme.FONT_FAMILY, 15, "bold"),
-                bg=theme.BG_DARK,
+                bg=theme.BG_SUBTLE,
                 fg=opt["color"],
             )
             time_lbl.pack(side=tk.LEFT, padx=(0, 8))
@@ -1079,7 +1149,7 @@ class MainWindow(tk.Tk):
                 card,
                 text=f"({opt['display_12h']})",
                 font=theme.FONT_CAPTION,
-                bg=theme.BG_DARK,
+                bg=theme.BG_SUBTLE,
                 fg=theme.TEXT_MUTED,
             )
             display_12h.pack(side=tk.LEFT, padx=(0, 12))
@@ -1088,7 +1158,7 @@ class MainWindow(tk.Tk):
                 card,
                 text=opt["tag"],
                 font=theme.FONT_CAPTION,
-                bg=theme.BG_DARK,
+                bg=theme.BG_SUBTLE,
                 fg=theme.TEXT_MAIN,
             )
             tag_lbl.pack(side=tk.LEFT)
@@ -1110,22 +1180,22 @@ class MainWindow(tk.Tk):
         stats_row = tk.Frame(container, bg=theme.BG_CARD)
         stats_row.pack(fill=tk.X, pady=(0, 16))
 
-        c1 = tk.Frame(stats_row, bg=theme.BG_DARK, padx=16, pady=12, bd=1, relief="solid")
+        c1 = tk.Frame(stats_row, bg=theme.BG_SUBTLE, padx=16, pady=12, bd=1, relief="solid", highlightthickness=1, highlightbackground=theme.BORDER_COLOR)
         c1.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(0, 8))
-        tk.Label(c1, text="CURRENT STREAK", font=theme.FONT_SMALL, bg=theme.BG_DARK, fg=theme.ACCENT_MOON).pack(anchor="w")
-        self.streak_val_lbl = tk.Label(c1, text=f"🔥 {stats['current_streak']} Days", font=theme.FONT_SUBTITLE, bg=theme.BG_DARK, fg=theme.TEXT_MAIN)
+        tk.Label(c1, text="CURRENT STREAK", font=theme.FONT_SMALL, bg=theme.BG_SUBTLE, fg=theme.ACCENT_MOON).pack(anchor="w")
+        self.streak_val_lbl = tk.Label(c1, text=f"🔥 {stats['current_streak']} Days", font=theme.FONT_SUBTITLE, bg=theme.BG_SUBTLE, fg=theme.TEXT_MAIN)
         self.streak_val_lbl.pack(anchor="w", pady=(4, 0))
 
-        c2 = tk.Frame(stats_row, bg=theme.BG_DARK, padx=16, pady=12, bd=1, relief="solid")
+        c2 = tk.Frame(stats_row, bg=theme.BG_SUBTLE, padx=16, pady=12, bd=1, relief="solid", highlightthickness=1, highlightbackground=theme.BORDER_COLOR)
         c2.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(0, 8))
-        tk.Label(c2, text="7-DAY ON-TIME RATE", font=theme.FONT_SMALL, bg=theme.BG_DARK, fg=theme.ACCENT_CYAN).pack(anchor="w")
-        self.rate_val_lbl = tk.Label(c2, text=f"{stats['recent_on_time_rate']}% Consistent", font=theme.FONT_SUBTITLE, bg=theme.BG_DARK, fg=theme.TEXT_MAIN)
+        tk.Label(c2, text="7-DAY ON-TIME RATE", font=theme.FONT_SMALL, bg=theme.BG_SUBTLE, fg=theme.ACCENT_CYAN).pack(anchor="w")
+        self.rate_val_lbl = tk.Label(c2, text=f"{stats['recent_on_time_rate']}% Consistent", font=theme.FONT_SUBTITLE, bg=theme.BG_SUBTLE, fg=theme.TEXT_MAIN)
         self.rate_val_lbl.pack(anchor="w", pady=(4, 0))
 
-        c3 = tk.Frame(stats_row, bg=theme.BG_DARK, padx=16, pady=12, bd=1, relief="solid")
+        c3 = tk.Frame(stats_row, bg=theme.BG_SUBTLE, padx=16, pady=12, bd=1, relief="solid", highlightthickness=1, highlightbackground=theme.BORDER_COLOR)
         c3.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-        tk.Label(c3, text="TOTAL RECORDED", font=theme.FONT_SMALL, bg=theme.BG_DARK, fg=theme.ACCENT_SUCCESS).pack(anchor="w")
-        self.total_val_lbl = tk.Label(c3, text=f"{stats['total_logged']} Nights", font=theme.FONT_SUBTITLE, bg=theme.BG_DARK, fg=theme.TEXT_MAIN)
+        tk.Label(c3, text="TOTAL RECORDED", font=theme.FONT_SMALL, bg=theme.BG_SUBTLE, fg=theme.ACCENT_SUCCESS).pack(anchor="w")
+        self.total_val_lbl = tk.Label(c3, text=f"{stats['total_logged']} Nights", font=theme.FONT_SUBTITLE, bg=theme.BG_SUBTLE, fg=theme.TEXT_MAIN)
         self.total_val_lbl.pack(anchor="w", pady=(4, 0))
 
         list_header = tk.Frame(container, bg=theme.BG_CARD)
@@ -1172,15 +1242,15 @@ class MainWindow(tk.Tk):
 
         for e in entries:
             dt = datetime.fromisoformat(e.timestamp)
-            row = tk.Frame(self.history_list_frame, bg=theme.BG_DARK, padx=12, pady=6, bd=1, relief="solid")
+            row = tk.Frame(self.history_list_frame, bg=theme.BG_SUBTLE, padx=12, pady=6, bd=1, relief="solid", highlightthickness=1, highlightbackground=theme.BORDER_COLOR)
             row.pack(fill=tk.X, pady=2)
 
             date_str = dt.strftime("%b %d, %Y  %I:%M %p")
-            tk.Label(row, text=date_str, font=theme.FONT_CAPTION, bg=theme.BG_DARK, fg=theme.TEXT_MAIN).pack(side=tk.LEFT)
+            tk.Label(row, text=date_str, font=theme.FONT_CAPTION, bg=theme.BG_SUBTLE, fg=theme.TEXT_MAIN).pack(side=tk.LEFT)
 
             action_color = theme.ACCENT_SUCCESS if "on_time" in e.action else theme.ACCENT_MOON
             action_text = "🌙 Slept On-Time" if "on_time" in e.action else ("⏳ Snoozed" if e.action == "snoozed" else "Dismissed")
-            tk.Label(row, text=action_text, font=theme.FONT_CAPTION, bg=theme.BG_DARK, fg=action_color).pack(side=tk.RIGHT)
+            tk.Label(row, text=action_text, font=theme.FONT_CAPTION, bg=theme.BG_SUBTLE, fg=action_color).pack(side=tk.RIGHT)
 
     def _build_footer(self, parent: Optional[tk.Widget] = None) -> None:
         p = parent if parent is not None else self
@@ -1205,9 +1275,9 @@ class MainWindow(tk.Tk):
             test_box,
             text="Toast",
             font=theme.FONT_SMALL,
-            bg="#16233b",
+            bg=theme.BG_CARD_HOVER,
             fg=theme.TEXT_MUTED,
-            activebackground=theme.BG_CARD_HOVER,
+            activebackground=theme.BG_CARD_ACTIVE,
             relief="flat",
             padx=8,
             pady=3,
@@ -1220,9 +1290,9 @@ class MainWindow(tk.Tk):
             test_box,
             text="Test Bedtime",
             font=theme.FONT_SMALL,
-            bg="#16233b",
+            bg=theme.BG_CARD_HOVER,
             fg=theme.TEXT_MAIN,
-            activebackground=theme.BG_CARD_HOVER,
+            activebackground=theme.BG_CARD_ACTIVE,
             relief="flat",
             padx=8,
             pady=3,
@@ -1235,9 +1305,9 @@ class MainWindow(tk.Tk):
             test_box,
             text="Test +30m",
             font=theme.FONT_SMALL,
-            bg="#16233b",
+            bg=theme.BG_CARD_HOVER,
             fg=theme.TEXT_MAIN,
-            activebackground=theme.BG_CARD_HOVER,
+            activebackground=theme.BG_CARD_ACTIVE,
             relief="flat",
             padx=8,
             pady=3,
@@ -1250,9 +1320,9 @@ class MainWindow(tk.Tk):
             test_box,
             text="⏸ Pause Media",
             font=theme.FONT_SMALL,
-            bg="#16233b",
+            bg=theme.BG_CARD_HOVER,
             fg=theme.ACCENT_CYAN,
-            activebackground=theme.BG_CARD_HOVER,
+            activebackground=theme.BG_CARD_ACTIVE,
             relief="flat",
             padx=8,
             pady=3,
@@ -1265,9 +1335,9 @@ class MainWindow(tk.Tk):
             test_box,
             text="Exit",
             font=theme.FONT_SMALL,
-            bg="#7f1d1d",
+            bg=theme.ACCENT_DANGER,
             fg="#ffffff",
-            activebackground="#991b1b",
+            activebackground=theme.ACCENT_DANGER_HOVER,
             relief="flat",
             padx=8,
             pady=3,
@@ -1275,6 +1345,49 @@ class MainWindow(tk.Tk):
             command=self.exit_application,
         )
         quit_btn.pack(side=tk.LEFT, padx=3)
+
+    # -------------------------------------------------------------------------
+    # Theme Switching & Handlers
+    # -------------------------------------------------------------------------
+
+    def set_theme(self, mode: str) -> None:
+        """Switch appearance theme between 'system', 'light', and 'dark'."""
+        if mode not in ("system", "dark", "light"):
+            return
+        cfg = self.config_mgr.config
+        cfg.theme_mode = mode
+        cfg.dark_mode = (mode != "light")
+        self.config_mgr.save(cfg)
+
+        theme.set_theme_mode(mode)
+        theme.apply_theme_to_ttk(self.style)
+        self.configure(bg=theme.BG_DARK)
+
+        # Preserve current active tab
+        current_tab = "tab_schedule"
+        if hasattr(self, "segmented_nav") and hasattr(self.segmented_nav, "active_tab"):
+            current_tab = self.segmented_nav.active_tab
+
+        # Rebuild UI with new theme palette
+        if hasattr(self, "main_scroll") and self.main_scroll.winfo_exists():
+            self.main_scroll.destroy()
+
+        self._build_ui()
+
+        # Restore active tab
+        if hasattr(self, "segmented_nav"):
+            self.segmented_nav.select_tab(current_tab)
+
+        # Refresh time displays
+        b_h, b_m = parse_time_str(self.config_mgr.config.bedtime)
+        self._update_time_display(b_h, b_m)
+
+    def _cycle_theme(self) -> None:
+        """Cycle through appearance modes: system -> light -> dark -> system."""
+        cur = getattr(self.config_mgr.config, "theme_mode", "system")
+        cycle_map = {"system": "light", "light": "dark", "dark": "system"}
+        next_mode = cycle_map.get(cur, "system")
+        self.set_theme(next_mode)
 
     # -------------------------------------------------------------------------
     # Actions & Handlers
@@ -1466,6 +1579,10 @@ class MainWindow(tk.Tk):
     def _restore_from_tray(self) -> None:
         def restore():
             self.deiconify()
+            try:
+                self.state("zoomed")
+            except Exception:
+                pass
             self.lift()
             self.focus_force()
         self.after(0, restore)

@@ -36,15 +36,21 @@ class AppConfig:
     morning_reset_hour: int = 6
     pause_media_on_reminder: bool = True
     fullscreen_reminder: bool = True
+    theme_mode: str = "system"  # "system", "dark", or "light"
 
     def __post_init__(self):
         if self.active_days is None:
             self.active_days = [0, 1, 2, 3, 4, 5, 6]
         if self.escalating_intervals is None:
             self.escalating_intervals = [30, 15, 10, 5]
+        if self.theme_mode not in ("system", "dark", "light"):
+            self.theme_mode = "dark" if self.dark_mode else "light"
+        self.dark_mode = (self.theme_mode != "light")
         self.validate()
 
     def validate(self) -> None:
+        if self.theme_mode not in ("system", "dark", "light"):
+            raise ValueError("theme_mode must be 'system', 'dark', or 'light'.")
         if not TIME_PATTERN.match(self.bedtime):
             raise ValueError(f"Invalid bedtime format '{self.bedtime}'. Expected HH:MM in 24-hour format.")
         if not TIME_PATTERN.match(self.wake_time):
