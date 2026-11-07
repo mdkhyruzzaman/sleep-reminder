@@ -74,7 +74,9 @@ python -m unittest discover -s tests -v
 
 ---
 
-## 📂 Project Architecture
+## 📂 Project Architecture & Developer Guide
+
+> For a complete visual UI-to-code mapping and deep-dive technical reference, see **[DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md)**.
 
 ```
 sleep-reminder/
