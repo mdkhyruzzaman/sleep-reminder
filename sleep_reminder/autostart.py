@@ -23,7 +23,7 @@ def get_launch_command() -> str:
         if os.path.exists(pythonw_candidate):
             python_exe = pythonw_candidate
 
-    main_script = root_dir / "run.py"
+    main_script = root_dir / "main.py"
     return f'"{python_exe}" "{main_script}" --minimized'
 
 

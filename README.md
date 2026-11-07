@@ -81,9 +81,12 @@ python -m unittest discover -s tests -v
 ```
 sleep-reminder/
 ├── main.py                     # Main application launcher
-├── run.py                      # Alternative entry point
 ├── run.bat                     # Windows batch double-click runner
-├── README.md                   # Documentation
+├── launch.vbs                  # Silent 1-click launcher with auto-startup
+├── stop.bat                    # Clean stop script (disables autostart)
+├── create_shortcut.bat         # Desktop shortcut creator with moon icon
+├── README.md                   # User documentation
+├── DEVELOPER_GUIDE.md          # Code architecture & UI mapping guide
 ├── sleep_reminder/
 │   ├── __init__.py             # Package exports
 │   ├── app.py                  # App bootstrapper & CLI arguments

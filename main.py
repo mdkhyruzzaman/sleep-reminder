@@ -3,8 +3,6 @@
 Supports running directly via:
     python main.py
 or
-    python run.py
-or
     pythonw main.py --minimized
 """
 
