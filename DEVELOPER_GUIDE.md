@@ -71,8 +71,8 @@ flowchart TD
     subgraph UI ["🎨 User Interface Layer (sleep_reminder/ui)"]
         MW["MainWindow (main_window.py)\nMaster Full-Page ScrollableFrame"]
         Header["_build_header()\nLogo, Status, Clock, Sound Button"]
-        Nav["_build_nav_bar()\nSegmentedNavBar"]
         Hero["_build_hero_card()\nSegmented Digital Countdown Chips"]
+        Nav["_build_nav_bar()\nSegmentedNavBar (Unified Tab Bar)"]
         Studio["_build_schedule_tab()\nBedtimeTimePicker & Preset Chips"]
         Ladder["_build_timeline_ladder()\nCalculated Escalation Timestamps"]
         Settings["_build_settings_card()\nModernSwitch & SettingRow Cards"]
@@ -91,7 +91,7 @@ flowchart TD
         IconMgr["Icon Manager (icon.py)\nUncompressed DIB .ico & Taskbar Hook"]
     end
 
-    MW --> Header & Nav & Hero & Studio & Ladder & Settings
+    MW --> Header & Hero & Nav & Studio & Ladder & Settings
     MW --> Sched
     MW --> Tray
     Sched --> Media
@@ -135,22 +135,7 @@ flowchart TD
 
 ---
 
-### 3.3 Segmented Pill Navigation Bar
-
-```
-┌────────────────────────────────────────────────────────────────────────┐
-│  ( ⏰ Schedule & Escalation )   🌙 Sleep Cycles (REM)   📊 Habit Stats │
-└────────────────────────────────────────────────────────────────────────┘
-```
-
-| Visual Element | Source File & Class | Code Method | Description |
-|---|---|---|---|
-| **Segmented Navigation Bar** | [`components.py`](file:///c:/Users/khyruzzaman/Documents/GitHub/sleep-reminder/sleep_reminder/ui/components.py) (`SegmentedNavBar`) | `_build_pills()`, `select_tab()` (lines 94-150) | Modern segmented pill bar. Active tab displays vibrant indigo background (`#4f46e5`). |
-| **Tab Change Handler** | [`main_window.py`](file:///c:/Users/khyruzzaman/Documents/GitHub/sleep-reminder/sleep_reminder/ui/main_window.py) | `_on_tab_switched()` (lines 249-257) | Switches the active page in `self.notebook` and smoothly resets master scroll to top. |
-
----
-
-### 3.4 Hero Countdown Banner
+### 3.3 Hero Countdown Banner
 
 ```
 ┌────────────────────────────────────────────────────────────────────────┐
@@ -163,11 +148,27 @@ flowchart TD
 
 | Visual Element | Source File & Class | Code Method | Description |
 |---|---|---|---|
-| **Hero Card Container** | [`main_window.py`](file:///c:/Users/khyruzzaman/Documents/GitHub/sleep-reminder/sleep_reminder/ui/main_window.py) | `_build_hero_card()` (lines 259-373) | Deep navy glass card (`#0f192d`) with accent border highlight (`#233555`). |
-| **Digital Countdown Chips** | [`main_window.py`](file:///c:/Users/khyruzzaman/Documents/GitHub/sleep-reminder/sleep_reminder/ui/main_window.py) | `_build_hero_card()` (lines 297-319) | Three segmented number blocks: `chip_hrs_val`, `chip_mins_val`, and `chip_secs_val` in 22pt bold. |
-| **`🌙 Sleep Now` Button** | [`main_window.py`](file:///c:/Users/khyruzzaman/Documents/GitHub/sleep-reminder/sleep_reminder/ui/main_window.py) | `_handle_sleep_confirmed()` (line 327) | Prompts power confirmation dialog to put PC to sleep or shut down. |
+| **Hero Card Container** | [`main_window.py`](file:///c:/Users/khyruzzaman/Documents/GitHub/sleep-reminder/sleep_reminder/ui/main_window.py) | `_build_hero_card()` (lines 261-375) | Deep navy glass card (`#0f192d`) positioned directly below the header. |
+| **Digital Countdown Chips** | [`main_window.py`](file:///c:/Users/khyruzzaman/Documents/GitHub/sleep-reminder/sleep_reminder/ui/main_window.py) | `_build_hero_card()` | Three segmented number blocks: `chip_hrs_val`, `chip_mins_val`, and `chip_secs_val` in 22pt bold. |
+| **`🌙 Sleep Now` Button** | [`main_window.py`](file:///c:/Users/khyruzzaman/Documents/GitHub/sleep-reminder/sleep_reminder/ui/main_window.py) | `_handle_sleep_confirmed()` | Prompts power confirmation dialog to put PC to sleep or shut down. |
 | **`🔔 Test Bedtime Alert` Button** | [`main_window.py`](file:///c:/Users/khyruzzaman/Documents/GitHub/sleep-reminder/sleep_reminder/ui/main_window.py) | line 342 | Fires `_on_bedtime_triggered(0, 0, 30)` immediately for testing without waiting for night. |
-| **Hero Live Update Loop** | [`main_window.py`](file:///c:/Users/khyruzzaman/Documents/GitHub/sleep-reminder/sleep_reminder/ui/main_window.py) | `_on_scheduler_tick()` (lines 1275-1310) | Background scheduler thread callback updating digits and progress every second. |
+| **Hero Live Update Loop** | [`main_window.py`](file:///c:/Users/khyruzzaman/Documents/GitHub/sleep-reminder/sleep_reminder/ui/main_window.py) | `_on_scheduler_tick()` | Background scheduler thread callback updating digits and progress every second. |
+
+---
+
+### 3.4 Segmented Pill Navigation Bar (Unified Content Tabs)
+
+```
+┌────────────────────────────────────────────────────────────────────────┐
+│  ( ⏰ Schedule & Escalation )   🌙 Sleep Cycles (REM)   📊 Habit Stats │
+└────────────────────────────────────────────────────────────────────────┘
+```
+
+| Visual Element | Source File & Class | Code Method | Description |
+|---|---|---|---|
+| **Segmented Navigation Bar** | [`components.py`](file:///c:/Users/khyruzzaman/Documents/GitHub/sleep-reminder/sleep_reminder/ui/components.py) (`SegmentedNavBar`) | `_build_pills()`, `select_tab()` (lines 94-150) | Positioned directly above content as the unified tab controller. Active tab displays vibrant indigo background (`#4f46e5`). |
+| **Tab Change Handler** | [`main_window.py`](file:///c:/Users/khyruzzaman/Documents/GitHub/sleep-reminder/sleep_reminder/ui/main_window.py) | `_on_tab_switched()` | Switches the active page in `self.notebook` and smoothly resets master scroll to top. |
+| **Duplicate Notebook Tabs Removed** | [`theme.py`](file:///c:/Users/khyruzzaman/Documents/GitHub/sleep-reminder/sleep_reminder/ui/theme.py), [`main_window.py`](file:///c:/Users/khyruzzaman/Documents/GitHub/sleep-reminder/sleep_reminder/ui/main_window.py) | `NoTabs.TNotebook` | Old desktop tab headers are completely hidden with `style.layout("NoTabs.TNotebook.Tab", [])` so only the modern pill tabs exist. |
 
 ---
 

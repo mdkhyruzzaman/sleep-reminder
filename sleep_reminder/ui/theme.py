@@ -121,6 +121,12 @@ def apply_theme_to_ttk(style: ttk.Style) -> None:
         borderwidth=0,
     )
     style.configure(
+        "NoTabs.TNotebook",
+        background=BG_DARK,
+        borderwidth=0,
+    )
+    style.layout("NoTabs.TNotebook.Tab", [])
+    style.configure(
         "TNotebook.Tab",
         background=BG_CARD,
         foreground=TEXT_MUTED,

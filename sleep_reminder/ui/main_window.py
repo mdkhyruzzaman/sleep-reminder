@@ -117,15 +117,15 @@ class MainWindow(tk.Tk):
         # 1. Modern Web Navbar Header
         self._build_header(content)
 
-        # 2. Modern Segmented Tab Bar
-        self._build_nav_bar(content)
-
-        # 3. Modern Hero Countdown Card
+        # 2. Modern Hero Countdown Card (Section 1)
         self._build_hero_card(content)
 
-        # 4. Content Container with Notebook
-        self.notebook = ttk.Notebook(content)
-        self.notebook.pack(fill=tk.BOTH, expand=True, padx=22, pady=(0, 10))
+        # 3. Modern Segmented Tab Bar (Section 2: tab bar directly above content)
+        self._build_nav_bar(content)
+
+        # 4. Content Container with Notebook (desktop tab headers hidden; controlled exclusively by modern pill bar)
+        self.notebook = ttk.Notebook(content, style="NoTabs.TNotebook")
+        self.notebook.pack(fill=tk.BOTH, expand=True, padx=22, pady=(2, 10))
 
         self.tab_schedule = ScrollableTab(self.notebook, bg=theme.BG_CARD)
         self.tab_calculator = ScrollableTab(self.notebook, bg=theme.BG_CARD)
@@ -234,7 +234,7 @@ class MainWindow(tk.Tk):
     def _build_nav_bar(self, parent: Optional[tk.Widget] = None) -> None:
         p = parent if parent is not None else self
         nav_container = tk.Frame(p, bg=theme.BG_DARK, padx=22, pady=4)
-        nav_container.pack(fill=tk.X)
+        nav_container.pack(fill=tk.X, pady=(2, 4))
 
         tabs = [
             ("tab_schedule", "⏰  Schedule & Escalation"),
