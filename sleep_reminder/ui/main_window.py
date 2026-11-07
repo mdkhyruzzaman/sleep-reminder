@@ -25,7 +25,7 @@ from sleep_reminder.icon import apply_window_icon
 from sleep_reminder.media import pause_system_media
 from sleep_reminder.tray import WindowsTrayIcon
 from sleep_reminder.ui import theme
-from sleep_reminder.ui.components import ModernSwitch, ScrollableFrame, SegmentedNavBar, SettingRow
+from sleep_reminder.ui.components import ModernSwitch, ScrollableFrame, ScrollableTab, SegmentedNavBar, SettingRow
 from sleep_reminder.ui.modal import BedtimeModal
 from sleep_reminder.ui.toast import ToastNotification
 
@@ -108,22 +108,28 @@ class MainWindow(tk.Tk):
         self.protocol("WM_DELETE_WINDOW", self._on_close)
 
     def _build_ui(self) -> None:
+        # Full-page scroll container: eliminates all sticky regions so the entire dashboard scrolls cohesively
+        self.main_scroll = ScrollableFrame(self, bg=theme.BG_DARK)
+        self.main_scroll.pack(fill=tk.BOTH, expand=True)
+
+        content = self.main_scroll.content
+
         # 1. Modern Web Navbar Header
-        self._build_header()
+        self._build_header(content)
 
         # 2. Modern Segmented Tab Bar
-        self._build_nav_bar()
+        self._build_nav_bar(content)
 
         # 3. Modern Hero Countdown Card
-        self._build_hero_card()
+        self._build_hero_card(content)
 
         # 4. Content Container with Notebook
-        self.notebook = ttk.Notebook(self)
+        self.notebook = ttk.Notebook(content)
         self.notebook.pack(fill=tk.BOTH, expand=True, padx=22, pady=(0, 10))
 
-        self.tab_schedule = ScrollableFrame(self.notebook, bg=theme.BG_CARD)
-        self.tab_calculator = ScrollableFrame(self.notebook, bg=theme.BG_CARD)
-        self.tab_history = ScrollableFrame(self.notebook, bg=theme.BG_CARD)
+        self.tab_schedule = ScrollableTab(self.notebook, bg=theme.BG_CARD)
+        self.tab_calculator = ScrollableTab(self.notebook, bg=theme.BG_CARD)
+        self.tab_history = ScrollableTab(self.notebook, bg=theme.BG_CARD)
 
         self.notebook.add(self.tab_schedule, text="Schedule & Escalation")
         self.notebook.add(self.tab_calculator, text="Sleep Cycles (REM)")
@@ -134,14 +140,15 @@ class MainWindow(tk.Tk):
         self._build_history_tab()
 
         # 5. Modern Footer Bar
-        self._build_footer()
+        self._build_footer(content)
 
     # -------------------------------------------------------------------------
     # UI Component Builders
     # -------------------------------------------------------------------------
 
-    def _build_header(self) -> None:
-        header = tk.Frame(self, bg=theme.BG_DARK, padx=24, pady=12)
+    def _build_header(self, parent: Optional[tk.Widget] = None) -> None:
+        p = parent if parent is not None else self
+        header = tk.Frame(p, bg=theme.BG_DARK, padx=24, pady=12)
         header.pack(fill=tk.X)
 
         # Brand Logo & Tag
@@ -224,8 +231,9 @@ class MainWindow(tk.Tk):
         )
         self.sound_toggle_btn.pack(side=tk.RIGHT)
 
-    def _build_nav_bar(self) -> None:
-        nav_container = tk.Frame(self, bg=theme.BG_DARK, padx=22, pady=4)
+    def _build_nav_bar(self, parent: Optional[tk.Widget] = None) -> None:
+        p = parent if parent is not None else self
+        nav_container = tk.Frame(p, bg=theme.BG_DARK, padx=22, pady=4)
         nav_container.pack(fill=tk.X)
 
         tabs = [
@@ -244,16 +252,15 @@ class MainWindow(tk.Tk):
     def _on_tab_switched(self, tab_id: str) -> None:
         if tab_id == "tab_schedule":
             self.notebook.select(self.tab_schedule)
-            self.tab_schedule.scroll_to_top()
         elif tab_id == "tab_calculator":
             self.notebook.select(self.tab_calculator)
-            self.tab_calculator.scroll_to_top()
         elif tab_id == "tab_history":
             self.notebook.select(self.tab_history)
-            self.tab_history.scroll_to_top()
+        self.main_scroll.scroll_to_top()
 
-    def _build_hero_card(self) -> None:
-        hero_container = tk.Frame(self, bg=theme.BG_DARK, padx=22, pady=6)
+    def _build_hero_card(self, parent: Optional[tk.Widget] = None) -> None:
+        p = parent if parent is not None else self
+        hero_container = tk.Frame(p, bg=theme.BG_DARK, padx=22, pady=6)
         hero_container.pack(fill=tk.X)
 
         card = tk.Frame(
@@ -1175,8 +1182,9 @@ class MainWindow(tk.Tk):
             action_text = "🌙 Slept On-Time" if "on_time" in e.action else ("⏳ Snoozed" if e.action == "snoozed" else "Dismissed")
             tk.Label(row, text=action_text, font=theme.FONT_CAPTION, bg=theme.BG_DARK, fg=action_color).pack(side=tk.RIGHT)
 
-    def _build_footer(self) -> None:
-        footer = tk.Frame(self, bg=theme.BG_DARK, padx=22, pady=8)
+    def _build_footer(self, parent: Optional[tk.Widget] = None) -> None:
+        p = parent if parent is not None else self
+        footer = tk.Frame(p, bg=theme.BG_DARK, padx=22, pady=8)
         footer.pack(fill=tk.X)
 
         self.tip_lbl = tk.Label(
@@ -1473,7 +1481,15 @@ class MainWindow(tk.Tk):
                     self.tray.show_balloon("Sleep Reminder Resumed", "Reminders are active.")
         self.after(0, toggle)
 
-    def exit_application(self) -> None:
+    def exit_application(self, disable_autostart: bool = True) -> None:
+        if disable_autostart:
+            try:
+                from sleep_reminder.autostart import set_autostart
+                set_autostart(False)
+                self.config_mgr.config.autostart = False
+                self.config_mgr.save()
+            except Exception:
+                pass
         if self._save_feedback_timer_id:
             try:
                 self.after_cancel(self._save_feedback_timer_id)

@@ -18,6 +18,16 @@ def run() -> None:
     history_mgr = HistoryManager()
     sound_mgr = SoundManager(enabled=config_mgr.config.enable_sound)
 
+    # Automatically ensure Windows autostart is registered so it auto-runs on reboot
+    try:
+        from sleep_reminder.autostart import set_autostart
+        set_autostart(True)
+        if not config_mgr.config.autostart:
+            config_mgr.config.autostart = True
+            config_mgr.save()
+    except Exception:
+        pass
+
     app = MainWindow(
         config_mgr=config_mgr,
         history_mgr=history_mgr,

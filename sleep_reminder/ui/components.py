@@ -324,3 +324,20 @@ class ScrollableFrame(tk.Frame):
         except Exception:
             pass
 
+
+class ScrollableTab(ScrollableFrame):
+    """A tab container integrated directly into the window's master full-page scroll.
+
+    Avoids nested scrollbars while maintaining full API compatibility.
+    """
+
+    def __init__(self, parent: tk.Widget, bg: str = theme.BG_CARD, *args, **kwargs) -> None:
+        tk.Frame.__init__(self, parent, bg=bg, *args, **kwargs)
+        self.content = self
+        self.bg = bg
+
+    def scroll_to_top(self) -> None:
+        """Handled by the master full-page scroll container."""
+        pass
+
+

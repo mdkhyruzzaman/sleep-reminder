@@ -12,13 +12,18 @@ APP_REG_NAME = "SleepReminderApp"
 
 def get_launch_command() -> str:
     """Return the command line to silently start the application on Windows login."""
+    root_dir = Path(__file__).resolve().parent.parent
+    launch_vbs = root_dir / "launch.vbs"
+    if launch_vbs.exists():
+        return f'wscript.exe "{launch_vbs}" --minimized'
+
     python_exe = sys.executable
     if "python.exe" in python_exe.lower():
         pythonw_candidate = python_exe.lower().replace("python.exe", "pythonw.exe")
         if os.path.exists(pythonw_candidate):
             python_exe = pythonw_candidate
 
-    main_script = Path(__file__).resolve().parent.parent / "run.py"
+    main_script = root_dir / "run.py"
     return f'"{python_exe}" "{main_script}" --minimized'
 
 
@@ -57,6 +62,5 @@ def set_autostart(enable: bool) -> bool:
                 except FileNotFoundError:
                     pass
         return True
-    except Exception as e:
-        print(f"Error updating autostart: {e}", file=sys.stderr)
+    except Exception:
         return False

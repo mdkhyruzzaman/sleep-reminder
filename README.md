@@ -50,18 +50,17 @@
 - Windows 10 or Windows 11
 - Python 3.10+ (tested on Python 3.14 on Windows)
 
-### 2. Launch the App
-Double-click `run.bat` or run from PowerShell / Command Prompt:
+### 2. Launch the App (1-Click Silent Auto-Startup)
+Double-click **`launch.vbs`** in the project folder:
+* **Runs completely silently** in 0.1s (no black command window flash).
+* **Automatic Auto-Run on Boot**: Once launched, Sleep Reminder automatically registers with Windows so it automatically runs in the background whenever your laptop powers on. You do not need to manually launch it every day!
 
-```powershell
-python main.py
-```
+To create a convenient desktop shortcut with the moon icon:
+* Double-click **`create_shortcut.bat`**.
 
-To run silently minimized to the Windows system tray:
-
-```powershell
-pythonw main.py --minimized
-```
+### 3. Stop / Exit the Application
+* **Method A**: Right-click the crescent moon icon in the Windows System Tray (near the clock) and click **Exit**.
+* **Method B**: Double-click **`stop.bat`** to immediately stop the app and disable auto-run on boot.
 
 ---
 
