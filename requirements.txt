@@ -1,0 +1,5 @@
+# Sleep Reminder requires Python 3.10+
+# Core functionality is self-contained using Python's standard library (Tkinter, winsound, wave, json, threading).
+#
+# Optional build & distribution dependencies:
+# pyinstaller>=6.0.0
