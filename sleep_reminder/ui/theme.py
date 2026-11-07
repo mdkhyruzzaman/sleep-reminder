@@ -232,8 +232,18 @@ def apply_theme_to_ttk(style: ttk.Style) -> None:
         background=BG_CARD_HOVER,
         foreground=TEXT_MAIN,
         arrowcolor=TEXT_MAIN,
-        borderwidth=0,
-        padding=4,
+        bordercolor=BORDER_COLOR,
+        darkcolor=BG_CARD_HOVER,
+        lightcolor=BG_CARD_HOVER,
+        padding=(6, 4),
+    )
+    style.map(
+        "TCombobox",
+        fieldbackground=[("readonly", BG_CARD_HOVER), ("focus", BG_CARD_ACTIVE)],
+        foreground=[("readonly", TEXT_MAIN)],
+        selectbackground=[("readonly", BG_CARD_HOVER)],
+        selectforeground=[("readonly", TEXT_MAIN)],
+        arrowcolor=[("active", ACCENT_PRIMARY), ("readonly", TEXT_MAIN)],
     )
 
     style.configure(

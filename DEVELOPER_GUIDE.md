@@ -122,18 +122,18 @@ flowchart TD
 ### 3.2 Top Header & Controls
 
 ```
-[ 🌙 SLEEP REMINDER  PRO v2.0 ]                [ 💻 System ]  [ 🔔 Sound On ]  [ 10:45:12 PM ]
+[ 🌙 SLEEP REMINDER  PRO v2.0 ]     Theme: [ 💻 System ▼ ]  [ 🔔 Sound On ]  [ 10:45:12 PM ]
   ● Active Monitoring
 ```
 
 | Visual Element | Source File & Class | Code Method | Description |
 |---|---|---|---|
-| **Header Container** | [`main_window.py`](file:///c:/Users/khyruzzaman/Documents/GitHub/sleep-reminder/sleep_reminder/ui/main_window.py) | `_build_header()` (lines 160-245) | Top navigation bar with brand branding and system widgets. |
+| **Header Container** | [`main_window.py`](file:///c:/Users/khyruzzaman/Documents/GitHub/sleep-reminder/sleep_reminder/ui/main_window.py) | `_build_header()` (lines 160-265) | Top navigation bar with brand branding and system widgets. |
 | **Moon Logo & Badge** | [`main_window.py`](file:///c:/Users/khyruzzaman/Documents/GitHub/sleep-reminder/sleep_reminder/ui/main_window.py) | `_build_header()` (lines 165-200) | `🌙` character in `ACCENT_MOON`, `SLEEP REMINDER` title, and indigo `PRO v2.0` badge. |
 | **Status Pill (`● Active Monitoring`)** | [`main_window.py`](file:///c:/Users/khyruzzaman/Documents/GitHub/sleep-reminder/sleep_reminder/ui/main_window.py) | `_build_header()` (lines 203-210) | Label referenced by `self.status_badge`. Changes to glowing amber when paused. |
 | **Live Digital Clock Chip** | [`main_window.py`](file:///c:/Users/khyruzzaman/Documents/GitHub/sleep-reminder/sleep_reminder/ui/main_window.py) | `_build_header()` (lines 216-227) | `self.clock_lbl` inside glassmorphic border chip. Updated every second by `_on_scheduler_tick()`. |
 | **Sound Toggle Pill** | [`main_window.py`](file:///c:/Users/khyruzzaman/Documents/GitHub/sleep-reminder/sleep_reminder/ui/main_window.py) | `_build_header()`, `_toggle_sound()` (lines 228-243) | `self.sound_toggle_btn`. Toggles `config.enable_sound` and switches text between `🔔 Sound On` and `🔕 Muted`. |
-| **Header Theme Switcher Button** | [`main_window.py`](file:///c:/Users/khyruzzaman/Documents/GitHub/sleep-reminder/sleep_reminder/ui/main_window.py) | `_build_header()`, `_cycle_theme()` | `self.theme_btn`. 1-click switcher cycling between `💻 System`, `☀️ Light`, and `🌙 Dark` modes. |
+| **Header Theme Select Dropdown** | [`main_window.py`](file:///c:/Users/khyruzzaman/Documents/GitHub/sleep-reminder/sleep_reminder/ui/main_window.py) | `_build_header()`, `_on_header_theme_selected()` | `Theme:` label on the left with `self.theme_select` (`ttk.Combobox`) dropdown allowing instant selection between `☀️ Light`, `🌙 Dark`, and `💻 System`. |
 
 ---
 
@@ -224,7 +224,7 @@ flowchart TD
 
 ```
 ┌────────────────────────────────────────────────────────────────────────┐
-│ 🎨 Appearance Theme                   [ ☀️ Light ] [ 🌙 Dark ] [ 💻 Sys]│
+│ 🎨 Appearance Theme                                [ 💻 System   ▼ ]   │
 │ ⚡ Escalating Warnings (+30m, +15m, +10m, then repeating every 5m) [ON ]│
 │ ⏸️ Auto-Pause Video & Music (YouTube, Spotify, VLC)               [ON ]│
 │ 🖥️ Full-Screen Ambient Starry Display Overlay                     [ON ]│
@@ -235,7 +235,7 @@ flowchart TD
 
 | Visual Element | Source File & Class | Code Method | Description |
 |---|---|---|---|
-| **Appearance Theme Selector** | [`main_window.py`](file:///c:/Users/khyruzzaman/Documents/GitHub/sleep-reminder/sleep_reminder/ui/main_window.py) (`SettingRow`) | `_build_schedule_tab()`, `set_theme()` | Interactive pill segmented button group offering `[ ☀️ Light ]`, `[ 🌙 Dark ]`, and `[ 💻 System ]`. Dynamically switches and saves appearance. |
+| **Appearance Theme Select Dropdown** | [`main_window.py`](file:///c:/Users/khyruzzaman/Documents/GitHub/sleep-reminder/sleep_reminder/ui/main_window.py) (`SettingRow`) | `_build_schedule_tab()`, `_on_setting_theme_selected()` | `self.setting_theme_select` Combobox dropdown offering `[ ☀️ Light ]`, `[ 🌙 Dark ]`, and `[ 💻 System ]`. Dynamically switches and saves appearance. |
 | **Linear Setting Card Row** | [`components.py`](file:///c:/Users/khyruzzaman/Documents/GitHub/sleep-reminder/sleep_reminder/ui/components.py) (`SettingRow`) | lines 152-225 | Card container ensuring title, description, and right-aligned controls fit uniformly without stair-stepping. |
 | **Interactive Pill Switch** | [`components.py`](file:///c:/Users/khyruzzaman/Documents/GitHub/sleep-reminder/sleep_reminder/ui/components.py) (`ModernSwitch`) | lines 15-92 | iOS/Linear-style animated Canvas toggle switch with smooth circular knob. |
 | **Auto-Save on Toggle** | [`main_window.py`](file:///c:/Users/khyruzzaman/Documents/GitHub/sleep-reminder/sleep_reminder/ui/main_window.py) | `_on_setting_changed()` (lines 810-850) | Automatically validates configuration, writes to disk, and notifies active scheduler. |

@@ -72,6 +72,7 @@ class MainWindow(tk.Tk):
         # Style configuration
         self.style = ttk.Style(self)
         theme.apply_theme_to_ttk(self.style)
+        self._apply_combobox_listbox_styles()
 
         # Open maximized on launch so the user has full view, with instant restore/resize support
         try:
@@ -209,7 +210,7 @@ class MainWindow(tk.Tk):
         )
         self.status_badge.pack(anchor="w")
 
-        # Right Controls: Real-time Clock Chip, Sound Pill, and Theme Mode Switcher
+        # Right Controls: Real-time Clock Chip, Sound Pill, and Theme Select Dropdown
         controls_box = tk.Frame(header, bg=theme.BG_DARK)
         controls_box.pack(side=tk.RIGHT)
 
@@ -239,25 +240,37 @@ class MainWindow(tk.Tk):
             cursor="hand2",
             command=self._toggle_sound,
         )
-        self.sound_toggle_btn.pack(side=tk.RIGHT, padx=(8, 0))
+        self.sound_toggle_btn.pack(side=tk.RIGHT, padx=(10, 0))
+
+        # Theme selector container with descriptive label on left side
+        theme_control = tk.Frame(controls_box, bg=theme.BG_DARK)
+        theme_control.pack(side=tk.RIGHT)
+
+        theme_lbl = tk.Label(
+            theme_control,
+            text="Theme:",
+            font=(theme.FONT_FAMILY, 9, "bold"),
+            bg=theme.BG_DARK,
+            fg=theme.TEXT_MUTED,
+        )
+        theme_lbl.pack(side=tk.LEFT, padx=(0, 6))
 
         current_theme_mode = getattr(self.config_mgr.config, "theme_mode", "system")
-        mode_icon = "💻" if current_theme_mode == "system" else ("☀️" if current_theme_mode == "light" else "🌙")
-        self.theme_btn = tk.Button(
-            controls_box,
-            text=f"{mode_icon} {current_theme_mode.capitalize()}",
+        current_display = {"system": "💻 System", "light": "☀️ Light", "dark": "🌙 Dark"}.get(current_theme_mode, "💻 System")
+
+        self.theme_select = ttk.Combobox(
+            theme_control,
+            values=["☀️ Light", "🌙 Dark", "💻 System"],
+            state="readonly",
+            width=11,
             font=theme.FONT_CAPTION,
-            bg=theme.BG_CARD_HOVER,
-            fg=theme.TEXT_MAIN,
-            activebackground=theme.BG_CARD_ACTIVE,
-            activeforeground="#ffffff",
-            relief="flat",
-            padx=12,
-            pady=5,
-            cursor="hand2",
-            command=self._cycle_theme,
         )
-        self.theme_btn.pack(side=tk.RIGHT)
+        self.theme_select.set(current_display)
+        self.theme_select.bind("<<ComboboxSelected>>", self._on_header_theme_selected)
+        self.theme_select.pack(side=tk.LEFT)
+
+        # Alias for backward compatibility
+        self.theme_btn = self.theme_select
 
     def _build_nav_bar(self, parent: Optional[tk.Widget] = None) -> None:
         p = parent if parent is not None else self
@@ -701,32 +714,18 @@ class MainWindow(tk.Tk):
             title="Appearance Theme",
             description="Choose between Light theme, Dark theme, or automatically match Windows System theme.",
         )
-        theme_btn_box = tk.Frame(row_theme.right_box, bg=theme.BG_CARD)
-        theme_btn_box.pack(side=tk.RIGHT)
-
+        self.setting_theme_select = ttk.Combobox(
+            row_theme.right_box,
+            values=["☀️ Light", "🌙 Dark", "💻 System"],
+            state="readonly",
+            width=12,
+            font=theme.FONT_BODY,
+        )
         current_theme_mode = getattr(self.config_mgr.config, "theme_mode", "system")
-        for mode_key, mode_icon, mode_title in [
-            ("light", "☀️", "Light"),
-            ("dark", "🌙", "Dark"),
-            ("system", "💻", "System"),
-        ]:
-            is_active = (current_theme_mode == mode_key)
-            t_btn = tk.Button(
-                theme_btn_box,
-                text=f"{mode_icon} {mode_title}",
-                font=theme.FONT_BODY_BOLD if is_active else theme.FONT_CAPTION,
-                bg=theme.ACCENT_PRIMARY if is_active else theme.BG_CARD_HOVER,
-                fg="#ffffff" if is_active else theme.TEXT_MUTED,
-                activebackground=theme.ACCENT_PRIMARY_HOVER if is_active else theme.BG_CARD_ACTIVE,
-                activeforeground="#ffffff" if is_active else theme.TEXT_MAIN,
-                relief="flat",
-                bd=0,
-                padx=10,
-                pady=4,
-                cursor="hand2",
-                command=lambda m=mode_key: self.set_theme(m),
-            )
-            t_btn.pack(side=tk.LEFT, padx=3)
+        current_display = {"system": "💻 System", "light": "☀️ Light", "dark": "🌙 Dark"}.get(current_theme_mode, "💻 System")
+        self.setting_theme_select.set(current_display)
+        self.setting_theme_select.bind("<<ComboboxSelected>>", self._on_setting_theme_selected)
+        self.setting_theme_select.pack(side=tk.RIGHT)
 
         self.enable_escalating_check = tk.BooleanVar(value=cfg.enable_escalating_reminders)
         row_esc = SettingRow(
@@ -1350,6 +1349,29 @@ class MainWindow(tk.Tk):
     # Theme Switching & Handlers
     # -------------------------------------------------------------------------
 
+    def _apply_combobox_listbox_styles(self) -> None:
+        """Apply theme background and foreground to ttk.Combobox popup listbox."""
+        try:
+            self.option_add("*TCombobox*Listbox.background", theme.BG_CARD)
+            self.option_add("*TCombobox*Listbox.foreground", theme.TEXT_MAIN)
+            self.option_add("*TCombobox*Listbox.selectBackground", theme.ACCENT_PRIMARY)
+            self.option_add("*TCombobox*Listbox.selectForeground", "#ffffff")
+            self.option_add("*TCombobox*Listbox.font", theme.FONT_CAPTION)
+        except Exception:
+            pass
+
+    def _on_header_theme_selected(self, event=None) -> None:
+        val = self.theme_select.get()
+        mode_map = {"☀️ Light": "light", "🌙 Dark": "dark", "💻 System": "system"}
+        mode = mode_map.get(val, "system")
+        self.set_theme(mode)
+
+    def _on_setting_theme_selected(self, event=None) -> None:
+        val = self.setting_theme_select.get()
+        mode_map = {"☀️ Light": "light", "🌙 Dark": "dark", "💻 System": "system"}
+        mode = mode_map.get(val, "system")
+        self.set_theme(mode)
+
     def set_theme(self, mode: str) -> None:
         """Switch appearance theme between 'system', 'light', and 'dark'."""
         if mode not in ("system", "dark", "light"):
@@ -1362,6 +1384,7 @@ class MainWindow(tk.Tk):
         theme.set_theme_mode(mode)
         theme.apply_theme_to_ttk(self.style)
         self.configure(bg=theme.BG_DARK)
+        self._apply_combobox_listbox_styles()
 
         # Preserve current active tab
         current_tab = "tab_schedule"

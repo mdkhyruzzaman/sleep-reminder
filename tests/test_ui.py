@@ -224,6 +224,24 @@ class TestUIComponents(unittest.TestCase):
         app = MainWindow(cfg, hist, snd)
         app.update()
 
+        # Verify theme_select Combobox exists and is styled
+        from tkinter import ttk
+        self.assertIsInstance(app.theme_select, ttk.Combobox)
+        self.assertIn("Light", app.theme_select.cget("values")[0])
+
+        # Test selecting via Combobox dropdown event
+        app.theme_select.set("☀️ Light")
+        app._on_header_theme_selected()
+        app.update()
+        self.assertEqual(app.config_mgr.config.theme_mode, "light")
+        self.assertFalse(theme.IS_DARK)
+
+        app.theme_select.set("🌙 Dark")
+        app._on_header_theme_selected()
+        app.update()
+        self.assertEqual(app.config_mgr.config.theme_mode, "dark")
+        self.assertTrue(theme.IS_DARK)
+
         # Switch to light
         app.set_theme("light")
         app.update()
